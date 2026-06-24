@@ -1,0 +1,25 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+#[Fillable(['prom_id', 'class_id', 'type', 'start_date', 'end_date'])]
+class PromClass extends Model
+{
+    use HasFactory;
+
+    protected $table = 'prom_classes';
+
+    public function promotion()
+    {
+        return $this->belongsTo(Promotion::class, 'prom_id');
+    }
+
+    public function classe()
+    {
+        return $this->belongsTo(Classes::class, 'class_id');
+    }
+}
