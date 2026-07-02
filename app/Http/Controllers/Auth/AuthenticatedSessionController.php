@@ -36,7 +36,10 @@ class AuthenticatedSessionController extends Controller
     {
         /** @var PersonalAccessToken $token */
         $token = $request->user()->currentAccessToken();
-        $token->delete();
+
+        if ($token) {
+            PersonalAccessToken::destroy($token->id);
+        }
 
         return response()->json([
             'status'  => 'success',

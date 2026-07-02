@@ -8,19 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('classes', function (Blueprint $table) {
+        Schema::create('ues', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->string('code')->unique();  // ex: GIFL23IPOO
             $table->string('label');
-            $table->integer('total_credits');
-            $table->string('description')->nullable();
-            $table->boolean('class_ct')->default(false);
-            $table->boolean('class_cl')->default(false);
+            $table->integer('credits');
+            $table->foreignUuid('admin_id')->constrained('admins')->cascadeOnDelete();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('classes');
+        Schema::dropIfExists('ues');
     }
 };

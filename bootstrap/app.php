@@ -13,9 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->api(prepend: [
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-        ]);
+        // Retiré : API pure en Bearer token (Sanctum::createToken), pas de
+        // frontend SPA partageant le cookie de session avec l'API.
+        // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
 
         $middleware->alias([
             'isAdmin'  => \App\Http\Middleware\IsAdmin::class,

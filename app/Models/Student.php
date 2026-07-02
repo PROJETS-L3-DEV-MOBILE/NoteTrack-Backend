@@ -4,8 +4,10 @@ namespace App\Models;
 
 use App\Models\Concerns\HasUniqueProfile;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'first_name', 'last_name', 'matricule', 'number',
@@ -13,7 +15,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class Student extends Model
 {
-    use HasUniqueProfile;
+    use HasUniqueProfile, HasUuids;
+
+    protected $keyType = 'string';
+    public $incrementing = false;
 
     public function user(): BelongsTo
     {
@@ -28,5 +33,11 @@ class Student extends Model
     public function promotion(): BelongsTo
     {
         return $this->belongsTo(Promotion::class, 'prom_id');
+    }
+
+    // Fix #4 : relation manquante, pourtant utilisée par GradeCalculatorService
+    public function notes(): HasMany
+    {
+        return $this->hasMany(Note::class);
     }
 }
