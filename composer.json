@@ -48,6 +48,9 @@
             "npm install --ignore-scripts",
             "npm run build"
         ],
+        "post-install-cmd": [
+            "@php artisan l5-swagger:generate"
+        ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite'"
