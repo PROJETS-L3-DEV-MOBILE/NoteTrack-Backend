@@ -14,12 +14,19 @@ class IsAdmin
      *
      * @param  Closure(Request): (Response)  $next
      */
-    // app/Http/Middleware/IsAdmin.php
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user()->role !== 'admin') {
+        $user = $request->user();
+
+        if ($user === null) {
             return response()->json([
-                'message' => 'Accès interdit'
+                'message' => 'Non authentifié',
+            ], 401);
+        }
+
+        if ($user->role !== 'admin') {
+            return response()->json([
+                'message' => 'Accès interdit',
             ], 403);
         }
 
