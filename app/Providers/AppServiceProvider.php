@@ -32,5 +32,9 @@ class AppServiceProvider extends ServiceProvider
             return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
         });
 
+        Gate::define('viewApiDocs', function (?User $user) {
+            return $user && in_array($user->email, ['notetrack-backend.e-manasa.mg']);
+        });
+
     }
 }
