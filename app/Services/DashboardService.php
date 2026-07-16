@@ -146,9 +146,17 @@ class DashboardService
 
     private function resolveSession(?string $schoolYear): ?ExamSession
     {
+        // Fix : deux sessions créées lors du même seed (donc au même created_at
+        // à la seconde près) rendaient ce tri instable — ->latest('created_at')
+        // seul ne garantit aucun ordre en cas d'égalité, et pouvait donc
+        // retourner une session plus ancienne que prévu comme "la plus
+        // récente". Les uuid générés par HasUuids étant ordonnés par date de
+        // création (à la microseconde près), trier aussi par id lève
+        // l'ambiguïté de façon fiable.
         return ExamSession::query()
             ->when($schoolYear, fn (Builder $q) => $q->where('year', $schoolYear))
-            ->latest('created_at')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->first();
     }
 
