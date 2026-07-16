@@ -12,6 +12,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('email')->unique();
             $table->string('password');
+            $table->string('image')->nullable();
             $table->enum('role', ['admin', 'teacher', 'student']);
             $table->boolean('is_deleted')->default(false);
             $table->timestamp('deleted_at')->nullable();

@@ -17,5 +17,6 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(AdminSeeder::class);
         $this->call(PromotionSeeder::class);
+        $this->call(DashboardSeeder::class);
     }
 }

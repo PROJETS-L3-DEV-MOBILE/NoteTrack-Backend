@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\NoteStatus;
+use App\Enums\SessionStatus;
 use App\Observers\NoteObserver;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -42,6 +43,11 @@ class Note extends Model
         return $this->belongsTo(ExamSession::class, 'session_id');
     }
 
+    public function semester(): BelongsTo
+    {
+        return $this->belongsTo(Semester::class);
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -74,4 +80,20 @@ class Note extends Model
 
         return $value >= (float) $this->subject->threshold;
     }
+
+    // Ajout — statut d'affichage utilisé par le dashboard admin (NotesTable),
+    // distinct de `status` (présence à l'examen) : reflète où en est la note
+    // dans le cycle de publication. LOCKED prime sur PUBLISHED/PENDING dès que
+    // la session est verrouillée (RG08), même si la note avait déjà été publiée.
+    public function publicationStatus(): string
+    {
+        $session = $this->relationLoaded('session') ? $this->session : $this->session()->first();
+
+        return match (true) {
+            $session?->status === SessionStatus::Verrouillee => 'LOCKED',
+            $this->is_published                              => 'PUBLISHED',
+            default                                           => 'PENDING',
+        };
+    }
+
 }

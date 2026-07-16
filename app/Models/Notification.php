@@ -2,31 +2,29 @@
 
 namespace App\Models;
 
+use App\Enums\NotificationType;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['code', 'label', 'credits', 'admin_id'])]
-class UE extends Model
+// Modèle non fourni dans le projet initial : ajouté ici car
+// /admin/dashboard/recent-activities s'appuie explicitement dessus.
+#[Fillable(['title', 'description', 'type', 'is_read', 'admin_id'])]
+class Notification extends Model
 {
     use HasUuids;
 
-
-    protected $table = 'ues';
     protected $keyType = 'string';
     public $incrementing = false;
 
-    public function subjects(): HasMany
-    {
-        return $this->hasMany(Subject::class, 'ue_id');
-    }
+    protected $casts = [
+        'type'    => NotificationType::class,
+        'is_read' => 'boolean',
+    ];
 
     public function admin(): BelongsTo
     {
         return $this->belongsTo(Admin::class);
     }
-
 }

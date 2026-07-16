@@ -7,16 +7,16 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['code', 'label', 'rang'])]
-class Semestre extends Model
+#[Fillable(['semester_number'])]
+class Semester extends Model
 {
     use HasUuids;
 
     protected $keyType = 'string';
     public $incrementing = false;
 
-    public function ues(): HasMany
+    public function notes(): HasMany
     {
-        return $this->hasMany(UE::class, 'semestre_id');
+        return $this->hasMany(Note::class);
     }
 }

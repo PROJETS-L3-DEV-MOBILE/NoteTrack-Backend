@@ -3,15 +3,13 @@
 namespace App\Models;
 
 use App\Enums\SessionStatus;
-use App\Enums\SessionType;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['label', 'year', 'status', 'type', 'admin_id'])]
+#[Fillable(['label', 'year', 'status', 'admin_id'])]
 class ExamSession extends Model
 {
     use HasUuids;
@@ -24,20 +22,11 @@ class ExamSession extends Model
 
     protected $casts = [
         'status' => SessionStatus::class,
-        'type'   => SessionType::class,
     ];
 
     public function admin(): BelongsTo
     {
         return $this->belongsTo(Admin::class);
-    }
-
-    public function ues(): BelongsToMany
-    {
-        return $this->belongsToMany(UE::class, 'ue_sessions', 'session_id', 'ue_id')
-            ->withPivot(['start_date', 'end_date'])
-            ->using(UeSession::class)
-            ->withTimestamps();
     }
 
     public function notes(): HasMany

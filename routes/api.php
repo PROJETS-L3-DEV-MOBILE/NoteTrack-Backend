@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -30,4 +31,12 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('admin')->group(function () {
     Route::post('/students', [UserController::class, 'storeStudent']);
     Route::post('/teachers', [UserController::class, 'storeTeacher']);
+
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/stats', [DashboardController::class, 'stats']);
+        Route::get('/results', [DashboardController::class, 'results']);
+        Route::get('/recent-activities', [DashboardController::class, 'recentActivities']);
+        Route::get('/latest-notes', [DashboardController::class, 'latestNotes']);
+        Route::get('/recent-subjects', [DashboardController::class, 'recentSubjects']);
+    });
 });

@@ -6,19 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+
     public function up(): void
     {
-        Schema::create('classes', function (Blueprint $table) {
+        Schema::create('semesters', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('label');
-            $table->integer('total_credits');
-            $table->string('description')->nullable();
+            $table->unsignedInteger('semester_number');
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('classes');
+        Schema::dropIfExists('semesters');
     }
 };

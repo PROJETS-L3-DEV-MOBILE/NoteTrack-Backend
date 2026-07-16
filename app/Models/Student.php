@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\HasUniqueProfile;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute as EloquentAttribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,5 +40,16 @@ class Student extends Model
     public function notes(): HasMany
     {
         return $this->hasMany(Note::class);
+    }
+
+    // Ajout : `image` vit sur `users` (un seul champ pour les 3 profils), pas sur
+    // `students`. Cet accessor expose $student->image tel qu'attendu par
+    // LatestNoteResource, sans dupliquer la colonne sur students. Pensez à
+    // eager-loader 'user' (ex: with(['student.user'])) pour éviter du N+1.
+    protected function image(): EloquentAttribute
+    {
+        return EloquentAttribute::make(
+            get: fn () => $this->user?->image,
+        );
     }
 }

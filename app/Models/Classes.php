@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['label', 'total_credits', 'description', 'class_ct', 'class_cl'])]
+#[Fillable(['label', 'total_credits', 'description'])]
 class Classes extends Model
 {
     use HasFactory, HasUuids;
