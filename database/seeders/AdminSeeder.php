@@ -22,5 +22,17 @@ class AdminSeeder extends Seeder
             'email'    => $user->email,
             'user_id'  => $user->id,
         ]);
+
+        $user2 = User::create([
+            'email'    => 'admin@geit.com',
+            'password' => Hash::make('Admin123!#'),
+            'role'     => 'admin',
+        ]);
+
+        Admin::create([
+            'username' => 'admin2',
+            'email'    => $user2->email,
+            'user_id'  => $user2->id,
+        ]);
     }
 }
