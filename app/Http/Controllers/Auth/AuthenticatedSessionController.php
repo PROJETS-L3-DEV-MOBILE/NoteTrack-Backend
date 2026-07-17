@@ -41,7 +41,7 @@ class AuthenticatedSessionController extends Controller
         $user = $request->user();
 
         if (! $user->tokenCan('issue-access-token')) {
-            return response()->json(['message' => 'Action non autorisée avec ce jeton.'], 403);
+            return response()->json(['message' => 'Forbidden action with this token.'], 403);
         }
 
         $days = ($user->role === 'admin') ? 1 : 2;

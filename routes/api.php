@@ -16,9 +16,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth:sanctum')->post('/logout', [AuthenticatedSessionController::class, 'destroy']);
 
-Route::middleware(['auth:sanctum', 'ability:issue-access-token'])->group(function () {
-    Route::post('/refresh', [AuthenticatedSessionController::class, 'refresh']);
-});
+Route::middleware(['auth:sanctum', 'ability:issue-access-token'])->post('/refresh', [AuthenticatedSessionController::class, 'refresh']);
 
 Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
 
