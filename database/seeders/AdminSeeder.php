@@ -29,7 +29,7 @@ class AdminSeeder extends Seeder
             'role'     => 'admin',
         ]);
 
-        Admin::create([
+        Admin::created([
             'username' => 'admin2',
             'email'    => $user2->email,
             'user_id'  => $user2->id,

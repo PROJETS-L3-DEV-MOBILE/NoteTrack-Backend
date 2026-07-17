@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -17,11 +16,18 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $days = ($user->role === 'admin') ? 1 : 2;
+        $accessTokenExpiration = now()->addDays($days);
+        $refreshTokenExpiration = now()->addDays(14);
+
+        $accessToken = $user->createToken('access_token', ['access-api'], $accessTokenExpiration)->plainTextToken;
+        $refreshToken = $user->createToken('refresh_token', ['issue-access-token'], $refreshTokenExpiration)->plainTextToken;
 
         return response()->json([
             'status' => 'success',
-            'token' => $token,
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken,
+            'expires_at' => $accessTokenExpiration->toIso8601String(),
             'user' => [
                 'id' => $user->id,
                 'email' => $user->email,
@@ -30,20 +36,35 @@ class AuthenticatedSessionController extends Controller
         ]);
     }
 
+    public function refresh(Request $request): JsonResponse
+    {
+        $user = $request->user();
 
+        if (! $user->tokenCan('issue-access-token')) {
+            return response()->json(['message' => 'Action non autorisée avec ce jeton.'], 403);
+        }
+
+        $days = ($user->role === 'admin') ? 1 : 2;
+        $accessTokenExpiration = now()->addDays($days);
+
+        $user->tokens()->where('name', 'access_token')->delete();
+
+        $newAccessToken = $user->createToken('access_token', ['access-api'], $accessTokenExpiration)->plainTextToken;
+
+        return response()->json([
+            'status' => 'success',
+            'access_token' => $newAccessToken,
+            'expires_at' => $accessTokenExpiration->toIso8601String()
+        ]);
+    }
 
     public function destroy(Request $request): JsonResponse
     {
-        /** @var PersonalAccessToken $token */
-        $token = $request->user()->currentAccessToken();
-
-        if ($token) {
-            PersonalAccessToken::destroy($token->id);
-        }
+        $request->user()->tokens()->delete();
 
         return response()->json([
             'status'  => 'success',
-            'message' => 'Déconnecté avec succès'
+            'message' => 'Logout successful',
         ]);
     }
 }
