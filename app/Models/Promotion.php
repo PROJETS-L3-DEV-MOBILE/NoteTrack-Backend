@@ -20,10 +20,4 @@ class Promotion extends Model
     {
         return $this->hasMany(Student::class, 'prom_id');
     }
-
-    // Une promotion a plusieurs classes
-    public function classes()
-    {
-        return $this->hasMany(PromClass::class, 'prom_id');
-    }
 }

@@ -90,7 +90,7 @@ class DashboardSeeder extends Seeder
             [$first, $last] = $name;
 
             $user = User::create([
-                'email'    => Str::slug($first.'.'.$last).'@tutoconnect.test',
+                'email'    => Str::slug($first . '.' . $last) . '@tutoconnect.test',
                 'password' => Hash::make('password'),
                 'role'     => 'teacher',
             ]);
@@ -128,7 +128,7 @@ class DashboardSeeder extends Seeder
             ['name' => 'Bases de Données', 'credits' => 2, 'coefficient' => 1, 'teacher' => $teachers[1] ?? $teachers[0]],
         ];
 
-        $subjects = collect($subjectsData)->map(fn (array $data) => Subject::create([
+        $subjects = collect($subjectsData)->map(fn(array $data) => Subject::create([
             'name'         => $data['name'],
             'is_available' => true,
             'threshold'    => 10,
@@ -147,27 +147,18 @@ class DashboardSeeder extends Seeder
      */
     private function seedStudents(Admin $admin, int $count): array
     {
-        // Fix : promotions.prom_year est un integer (cf. migration et
-        // PromotionSeeder) ; '2025-2026' provoquait une erreur SQL en mode
-        // strict. Utilisation d'une année de cohorte simple, comme ailleurs.
-        $promotion = Promotion::create(['label' => 'L3 Informatique', 'prom_year' => 2026]);
+        $promotion = Promotion::create([
+            'label' => 'L3 Informatique',
+            'prom_year' => 2026
+        ]);
+
         $classe = Classe::create([
-            'label'         => 'L3-INFO-A',
+            'label'         => 'L3-Dev Web et Mobile',
             'total_credits' => 60,
-            'description'   => 'Classe unique de L3 Informatique',
+            'description'   => 'Licence 3, option Développement Web et Mobile',
         ]);
 
-        // Fix : 'actuelle' n'est pas une valeur valide de l'enum
-        // prom_classes.type (migration : ['S1', 'S2']).
-        PromClass::create([
-            'prom_id'    => $promotion->id,
-            'class_id'   => $classe->id,
-            'type'       => 'S1',
-            'start_date' => now()->startOfYear(),
-            'end_date'   => now()->endOfYear(),
-        ]);
-
-        $students = collect(range(1, $count))->map(function (int $number) use ($admin, $promotion) {
+        $students = collect(range(1, $count))->map(function (int $number) use ($admin, $promotion, $classe) {
             $user = User::create([
                 'email'    => "etudiant{$number}@tutoconnect.test",
                 'password' => Hash::make('password'),
@@ -183,6 +174,7 @@ class DashboardSeeder extends Seeder
                 'user_id'    => $user->id,
                 'admin_id'   => $admin->id,
                 'prom_id'    => $promotion->id,
+                'classe_id'   => $classe->id,
             ]);
         })->all();
 
@@ -241,11 +233,16 @@ class DashboardSeeder extends Seeder
         // précisément dans chaque tranche de mention (moyenne pondérée
         // coef. 2 / coef. 1) : failed, pass, satisfactory, good, excellent.
         $gradedPairs = [
-            [6, 7], [8, 5],       // failed   (<10)
-            [10, 10], [11, 10],   // pass     (10-11.99)
-            [14, 12], [12, 14],   // satisfactory (12-13.99)
-            [15, 14], [16, 13],   // good     (14-15.99)
-            [18, 16], [19, 18],   // excellent (>=16)
+            [6, 7],
+            [8, 5],       // failed   (<10)
+            [10, 10],
+            [11, 10],   // pass     (10-11.99)
+            [14, 12],
+            [12, 14],   // satisfactory (12-13.99)
+            [15, 14],
+            [16, 13],   // good     (14-15.99)
+            [18, 16],
+            [19, 18],   // excellent (>=16)
         ];
 
         $gradedStudents = array_slice($students, 0, count($gradedPairs));

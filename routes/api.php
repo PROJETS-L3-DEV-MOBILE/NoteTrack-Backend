@@ -30,6 +30,8 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
         Route::post('/students', [UserController::class, 'storeStudent']);
         Route::post('/teachers', [UserController::class, 'storeTeacher']);
 
+        Route::apiResource('classes', \App\Http\Controllers\ClasseController::class);
+
         Route::prefix('dashboard')->group(function () {
             Route::get('/stats', [DashboardController::class, 'stats']);
             Route::get('/results', [DashboardController::class, 'results']);

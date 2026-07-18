@@ -14,10 +14,4 @@ class Classe extends Model
 
     protected $keyType = 'string';
     public $incrementing = false;
-
-    // Une classe a plusieurs promotions
-    public function promotions()
-    {
-        return $this->hasMany(PromClass::class, 'class_id');
-    }
 }

@@ -22,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
         ]);
 
+        $middleware->redirectGuestsTo(fn() => response()->json([
+            'message' => 'Unauthenticated. Please provide a valid token.'
+        ], 401));
+
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
