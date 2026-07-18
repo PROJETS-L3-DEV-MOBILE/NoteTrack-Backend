@@ -50,7 +50,7 @@ class ClasseController extends Controller
 
     /**
      * Update the specified resource in storage.
-     * PUT/PATCH /api/classes/{classe}
+     * PUT /api/classes/{classe}
      */
     public function update(Request $request, Classe $classe): JsonResponse
     {

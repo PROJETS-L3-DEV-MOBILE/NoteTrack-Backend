@@ -21,9 +21,11 @@ class DashboardService
     /**
      * Cartes de statistiques du dashboard (AdminDashboardStats).
      *
-     * Hypothèse : le filtre de dates s'applique à la date d'enregistrement
-     * (created_at) de chaque ressource, sauf pour les notes publiées où
-     * published_at est la date pertinente.
+     * Le filtre de dates s'applique à la date d'enregistrement (created_at)
+     * de chaque ressource, sauf :
+     * - published_notes, où published_at est la date pertinente ;
+     * - active_teachers, qui reflète l'état actuel (indépendant de la
+     *   période filtrée) et n'est donc pas affecté par from_date/to_date.
      */
     public function stats(?string $fromDate, ?string $toDate): array
     {
@@ -35,12 +37,9 @@ class DashboardService
             // Un enseignant est considéré "actif" s'il a au moins une matière
             // disponible qui lui est affectée. Critère non défini explicitement
             // dans le cahier des charges : à valider avec l'équipe produit.
-            'active_teachers' => $this->applyDateRange(
-                Teacher::query()->whereHas('subjects', fn (Builder $q) => $q->where('is_available', true)),
-                'created_at',
-                $fromDate,
-                $toDate,
-            )->count(),
+            'active_teachers' => Teacher::query()
+                ->whereHas('subjects', fn (Builder $q) => $q->where('is_available', true))
+                ->count(),
 
             'published_notes' => $this->applyDateRange(
                 Note::query()->where('is_published', true),

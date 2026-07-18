@@ -12,7 +12,8 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('code')->unique();  // ex: GIFL23IPOO
             $table->string('label');
-            $table->integer('credits');
+            $table->string('color');
+            $table->foreignUuid('class_id')->nullable()->constrained('classes')->cascadeOnDelete();
             $table->foreignUuid('admin_id')->constrained('admins')->cascadeOnDelete();
             $table->timestamps();
         });

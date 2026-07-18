@@ -16,6 +16,7 @@ return new class extends Migration
             $table->integer('credits');
             $table->integer('coefficient');
             $table->foreignUuid('ue_id')->constrained('ues')->cascadeOnDelete();
+            $table->foreignUuid('semester_id')->constrained('semesters')->cascadeOnDelete();
             $table->foreignUuid('teacher_id')->constrained('teachers')->cascadeOnDelete();
             $table->foreignUuid('admin_id')->constrained('admins')->cascadeOnDelete();
             $table->timestamps();

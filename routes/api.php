@@ -4,6 +4,8 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\SubjectController;
+use App\Http\Controllers\Admin\UEController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +33,13 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
         Route::post('/teachers', [UserController::class, 'storeTeacher']);
 
         Route::apiResource('classes', \App\Http\Controllers\ClasseController::class);
+
+        Route::prefix('subjects')->group(function () {
+            Route::get('/', [SubjectController::class, 'index']);
+        });
+
+        Route::apiResource('ues', UEController::class)->only(['store', 'update', 'destroy']);
+        Route::apiResource('ues.subjects', SubjectController::class)->scoped()->only(['store', 'update', 'destroy']);
 
         Route::prefix('dashboard')->group(function () {
             Route::get('/stats', [DashboardController::class, 'stats']);

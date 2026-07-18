@@ -12,6 +12,7 @@ use App\Models\Note;
 use App\Models\Notification;
 use App\Models\PromClass;
 use App\Models\Promotion;
+use App\Models\Semester;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Teacher;
@@ -42,9 +43,11 @@ class DashboardSeeder extends Seeder
             $admin = $this->seedAdmin();
             $teachers = $this->seedTeachers($admin, 3);
 
-            [$ue, $subjects] = $this->seedAcademicStructure($admin, $teachers);
+            $classe = $this->seedClasse();
 
-            [$promotion, $students] = $this->seedStudents($admin, 12);
+            [$ue, $subjects] = $this->seedAcademicStructure($admin, $teachers, $classe);
+
+            [$promotion, $students] = $this->seedStudents($admin, $classe, 12);
 
             [$currentSession, $pastSession] = $this->seedExamSessions($admin);
 
@@ -106,22 +109,39 @@ class DashboardSeeder extends Seeder
     }
 
     /**
+     * Classe (niveau) unique du jeu de données, créée en premier pour que
+     * l'UE ci-dessous puisse y être rattachée (class_id requis pour que
+     * GET /admin/subjects — SubjectService::groupedByLevel() — remonte
+     * quelque chose : cette méthode filtre les classes via whereHas('ues')).
+     */
+    private function seedClasse(): Classe
+    {
+        return Classe::create([
+            'label'         => 'L3-Dev Web et Mobile',
+            'total_credits' => 60,
+            'description'   => 'Licence 3, option Développement Web et Mobile',
+        ]);
+    }
+
+    /**
      * @param  array<int, Teacher>  $teachers
      * @return array{0: UE, 1: array<int, Subject>}
      */
-    private function seedAcademicStructure(Admin $admin, array $teachers): array
+    private function seedAcademicStructure(Admin $admin, array $teachers, Classe $classe): array
     {
-        // Fix : App\Models\Semestre n'existe pas (le modèle réel s'appelle
-        // Semester et n'a ni relation ues(), ni colonne semester_id sur `ues`
-        // — cf. suggestions). UE::admin_id est le seul champ mass-assignable
-        // pertinent ici (#[Fillable(['code', 'label', 'credits', 'admin_id'])]),
-        // donc on crée l'UE directement.
         $ue = UE::create([
             'code'     => 'UE-INFO-501',
             'label'    => 'Génie Logiciel',
-            'credits'  => 5,
+            'color'    => '#4F46E5',
+            'class_id' => $classe->id,
             'admin_id' => $admin->id,
         ]);
+
+        // semester_id est NOT NULL en base (cf. migration create_subjects_table) :
+        // firstOrCreate() plutôt qu'un lookup simple, pour que ce seeder reste
+        // exécutable seul (php artisan db:seed --class=DashboardSeeder), même
+        // sans passer par SemesterSeeder au préalable.
+        $semester = Semester::firstOrCreate(['semester_number' => 1]);
 
         $subjectsData = [
             ['name' => 'Algorithmique', 'credits' => 3, 'coefficient' => 2, 'teacher' => $teachers[0]],
@@ -135,6 +155,7 @@ class DashboardSeeder extends Seeder
             'credits'      => $data['credits'],
             'coefficient'  => $data['coefficient'],
             'ue_id'        => $ue->id,
+            'semester_id'  => $semester->id,
             'teacher_id'   => $data['teacher']->id,
             'admin_id'     => $admin->id,
         ]))->all();
@@ -145,17 +166,11 @@ class DashboardSeeder extends Seeder
     /**
      * @return array{0: Promotion, 1: array<int, Student>}
      */
-    private function seedStudents(Admin $admin, int $count): array
+    private function seedStudents(Admin $admin, Classe $classe, int $count): array
     {
         $promotion = Promotion::create([
             'label' => 'L3 Informatique',
             'prom_year' => 2026
-        ]);
-
-        $classe = Classe::create([
-            'label'         => 'L3-Dev Web et Mobile',
-            'total_credits' => 60,
-            'description'   => 'Licence 3, option Développement Web et Mobile',
         ]);
 
         $students = collect(range(1, $count))->map(function (int $number) use ($admin, $promotion, $classe) {
@@ -205,10 +220,6 @@ class DashboardSeeder extends Seeder
             'admin_id' => $admin->id,
         ]);
 
-        // Fix : UE::sessions() n'existe pas (aucune relation many-to-many, ni
-        // table pivot ue_exam_session en base) — le lien entre UE et
-        // ExamSession se fait uniquement via Subject/Note (session_id),
-        // cf. suggestions.
         return [$currentSession, $pastSession];
     }
 

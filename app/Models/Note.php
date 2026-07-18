@@ -43,11 +43,6 @@ class Note extends Model
         return $this->belongsTo(ExamSession::class, 'session_id');
     }
 
-    public function semester(): BelongsTo
-    {
-        return $this->belongsTo(Semester::class);
-    }
-
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

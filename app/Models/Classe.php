@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 #[Fillable(['label', 'total_credits', 'description'])]
 class Classe extends Model
@@ -14,4 +16,16 @@ class Classe extends Model
 
     protected $keyType = 'string';
     public $incrementing = false;
+
+    // Ajout : nécessaire au regroupement par niveau de GET /admin/subjects
+    // (feature Subjects/UE). Ne touche à rien de la gestion des classes.
+    public function ues(): HasMany
+    {
+        return $this->hasMany(UE::class, 'class_id');
+    }
+
+    public function subjects(): HasManyThrough
+    {
+        return $this->hasManyThrough(Subject::class, UE::class, 'class_id', 'ue_id');
+    }
 }
