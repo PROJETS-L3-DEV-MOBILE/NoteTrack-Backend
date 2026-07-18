@@ -3,14 +3,12 @@
 namespace Database\Seeders;
 
 use App\Enums\NotificationType;
+use App\Enums\NoteType;
 use App\Enums\NoteStatus;
-use App\Enums\SessionStatus;
 use App\Models\Admin;
 use App\Models\Classe;
-use App\Models\ExamSession;
-use App\Models\Note;
 use App\Models\Notification;
-use App\Models\PromClass;
+use App\Models\Note;
 use App\Models\Promotion;
 use App\Models\Semester;
 use App\Models\Student;
@@ -29,11 +27,6 @@ use Illuminate\Support\Str;
  * /stats, /results, /recent-activities, /latest-notes, /recent-subjects.
  *
  * Lancer avec : php artisan db:seed --class=DashboardSeeder
- *
- * Idempotence : ce seeder crée systématiquement de nouvelles lignes (uuid,
- * emails uniques via Str::random). Le relancer plusieurs fois est sans danger
- * mais accumule les données ; sur un environnement de test, on peut faire
- * `php artisan migrate:fresh --seed` avant de le rejouer.
  */
 class DashboardSeeder extends Seeder
 {
@@ -47,15 +40,10 @@ class DashboardSeeder extends Seeder
 
             [$ue, $subjects] = $this->seedAcademicStructure($admin, $teachers, $classe);
 
-            [$promotion, $students] = $this->seedStudents($admin, $classe, 12);
+            [$promotion, $students] = $this->seedStudents($admin, $classe, 3);
 
-            [$currentSession, $pastSession] = $this->seedExamSessions($admin);
-
-            $this->seedNotes($students, $subjects, $currentSession, $pastSession, $teachers[0]);
-
-            // Verrouillée APRES la saisie des notes : sans ça, l'observateur
-            // NoteObserver (RG08) refuserait la création des notes ci-dessus.
-            $pastSession->lock();
+            // --- NOUVEAU : SEED DES NOTES ---
+            $this->seedNotes($admin, $subjects, $students);
 
             $this->seedNotifications($admin, $subjects, $students);
         });
@@ -66,15 +54,15 @@ class DashboardSeeder extends Seeder
     private function seedAdmin(): Admin
     {
         $user = User::create([
-            'email'    => 'admin.demo@tutoconnect.test',
+            'email' => 'admin.demo@tutoconnect.test',
             'password' => Hash::make('password'),
-            'role'     => 'admin',
+            'role' => 'admin',
         ]);
 
         return Admin::create([
             'username' => 'admin.demo',
-            'email'    => $user->email,
-            'user_id'  => $user->id,
+            'email' => $user->email,
+            'user_id' => $user->id,
         ]);
     }
 
@@ -93,33 +81,28 @@ class DashboardSeeder extends Seeder
             [$first, $last] = $name;
 
             $user = User::create([
-                'email'    => Str::slug($first . '.' . $last) . '@tutoconnect.test',
+                'email' => Str::slug($first . '.' . $last) . '@tutoconnect.test',
                 'password' => Hash::make('password'),
-                'role'     => 'teacher',
+                'role' => 'teacher',
             ]);
 
             return Teacher::create([
                 'first_name' => $first,
-                'last_name'  => $last,
-                'email'      => $user->email,
-                'user_id'    => $user->id,
-                'admin_id'   => $admin->id,
+                'last_name' => $last,
+                'email' => $user->email,
+                'user_id' => $user->id,
+                'admin_id' => $admin->id,
             ]);
         })->all();
     }
 
-    /**
-     * Classe (niveau) unique du jeu de données, créée en premier pour que
-     * l'UE ci-dessous puisse y être rattachée (class_id requis pour que
-     * GET /admin/subjects — SubjectService::groupedByLevel() — remonte
-     * quelque chose : cette méthode filtre les classes via whereHas('ues')).
-     */
     private function seedClasse(): Classe
     {
         return Classe::create([
-            'label'         => 'L3-Dev Web et Mobile',
+            'label' => 'L3-Dev Web et Mobile',
             'total_credits' => 60,
-            'description'   => 'Licence 3, option Développement Web et Mobile',
+            'description' => 'Licence 3, option Développement Web et Mobile',
+            'level' => 'L3',
         ]);
     }
 
@@ -130,17 +113,13 @@ class DashboardSeeder extends Seeder
     private function seedAcademicStructure(Admin $admin, array $teachers, Classe $classe): array
     {
         $ue = UE::create([
-            'code'     => 'UE-INFO-501',
-            'label'    => 'Génie Logiciel',
-            'color'    => '#4F46E5',
+            'code' => 'UE-INFO-501',
+            'label' => 'Génie Logiciel',
+            'color' => '#4F46E5',
             'class_id' => $classe->id,
             'admin_id' => $admin->id,
         ]);
 
-        // semester_id est NOT NULL en base (cf. migration create_subjects_table) :
-        // firstOrCreate() plutôt qu'un lookup simple, pour que ce seeder reste
-        // exécutable seul (php artisan db:seed --class=DashboardSeeder), même
-        // sans passer par SemesterSeeder au préalable.
         $semester = Semester::firstOrCreate(['semester_number' => 1]);
 
         $subjectsData = [
@@ -149,15 +128,15 @@ class DashboardSeeder extends Seeder
         ];
 
         $subjects = collect($subjectsData)->map(fn(array $data) => Subject::create([
-            'name'         => $data['name'],
+            'name' => $data['name'],
             'is_available' => true,
-            'threshold'    => 10,
-            'credits'      => $data['credits'],
-            'coefficient'  => $data['coefficient'],
-            'ue_id'        => $ue->id,
-            'semester_id'  => $semester->id,
-            'teacher_id'   => $data['teacher']->id,
-            'admin_id'     => $admin->id,
+            'threshold' => 10,
+            'credits' => $data['credits'],
+            'coefficient' => $data['coefficient'],
+            'ue_id' => $ue->id,
+            'semester_id' => $semester->id,
+            'teacher_id' => $data['teacher']->id,
+            'admin_id' => $admin->id,
         ]))->all();
 
         return [$ue, $subjects];
@@ -170,26 +149,26 @@ class DashboardSeeder extends Seeder
     {
         $promotion = Promotion::create([
             'label' => 'L3 Informatique',
-            'prom_year' => 2026
+            'prom_year' => 2026,
         ]);
 
         $students = collect(range(1, $count))->map(function (int $number) use ($admin, $promotion, $classe) {
             $user = User::create([
-                'email'    => "etudiant{$number}@tutoconnect.test",
+                'email' => "etudiant{$number}@tutoconnect.test",
                 'password' => Hash::make('password'),
-                'role'     => 'student',
+                'role' => 'student',
             ]);
 
             return Student::create([
                 'first_name' => "Étudiant{$number}",
-                'last_name'  => 'Démo',
-                'matricule'  => sprintf('ETU-2026-%03d', $number),
-                'number'     => $number,
-                'email'      => $user->email,
-                'user_id'    => $user->id,
-                'admin_id'   => $admin->id,
-                'prom_id'    => $promotion->id,
-                'classe_id'   => $classe->id,
+                'last_name' => 'Démo',
+                'matricule' => sprintf('ETU-2026-%03d', $number),
+                'number' => $number,
+                'email' => $user->email,
+                'user_id' => $user->id,
+                'admin_id' => $admin->id,
+                'prom_id' => $promotion->id,
+                'classe_id' => $classe->id,
             ]);
         })->all();
 
@@ -197,141 +176,34 @@ class DashboardSeeder extends Seeder
     }
 
     /**
-     * @return array{0: ExamSession, 1: ExamSession} [session courante, session passée]
-     */
-    private function seedExamSessions(Admin $admin): array
-    {
-        // Créée en premier : sera la session la plus ancienne, verrouillée
-        // ensuite dans run(). Sert à tester le statut LOCKED et le filtre
-        // school_year sur /results.
-        $pastSession = ExamSession::create([
-            'label'    => 'Session normale 2024-2025',
-            'year'     => '2024-2025',
-            'status'   => SessionStatus::Publiee,
-            'admin_id' => $admin->id,
-        ]);
-
-        // Créée en second : devient la session "la plus récente" utilisée
-        // par défaut par /results quand school_year n'est pas fourni.
-        $currentSession = ExamSession::create([
-            'label'    => 'Session normale 2025-2026',
-            'year'     => '2025-2026',
-            'status'   => SessionStatus::Publiee,
-            'admin_id' => $admin->id,
-        ]);
-
-        return [$currentSession, $pastSession];
-    }
-
-    /**
-     * Répartit les notes pour couvrir les 5 catégories de /results (échec à
-     * très bien), un étudiant non encore évalué, des notes en attente
-     * (PENDING) et des notes sur la session passée (deviendra LOCKED).
+     * New method : Génère les notes pour chaque combinaison Étudiant / Matière / Type
      *
-     * @param  array<int, Student>  $students
      * @param  array<int, Subject>  $subjects
+     * @param  array<int, Student>  $students
      */
-    private function seedNotes(
-        array $students,
-        array $subjects,
-        ExamSession $currentSession,
-        ExamSession $pastSession,
-        Teacher $author,
-    ): void {
-        [$algo, $bdd] = $subjects;
+    private function seedNotes(Admin $admin, array $subjects, array $students): void
+    {
+        $mockValues = [14.5, 12.0, 08.5, 16.0, 10.0, -1];
+        $valueIndex = 0;
 
-        // (valeur Algo, valeur BDD) par étudiant, choisies pour retomber
-        // précisément dans chaque tranche de mention (moyenne pondérée
-        // coef. 2 / coef. 1) : failed, pass, satisfactory, good, excellent.
-        $gradedPairs = [
-            [6, 7],
-            [8, 5],       // failed   (<10)
-            [10, 10],
-            [11, 10],   // pass     (10-11.99)
-            [14, 12],
-            [12, 14],   // satisfactory (12-13.99)
-            [15, 14],
-            [16, 13],   // good     (14-15.99)
-            [18, 16],
-            [19, 18],   // excellent (>=16)
-        ];
+        foreach ($students as $student) {
+            foreach ($subjects as $subject) {
+                foreach (NoteType::cases() as $type) {
+                    $value = $mockValues[$valueIndex % count($mockValues)];
+                    $valueIndex++;
 
-        $gradedStudents = array_slice($students, 0, count($gradedPairs));
-        $ungradedStudents = array_slice($students, count($gradedPairs));
-
-        foreach ($gradedStudents as $index => $student) {
-            [$algoValue, $bddValue] = $gradedPairs[$index];
-
-            $this->createPublishedNote($student, $algo, $currentSession, $author, $algoValue, daysAgo: 10 - $index);
-            $this->createPublishedNote($student, $bdd, $currentSession, $author, $bddValue, daysAgo: 10 - $index);
+                    Note::create([
+                        'id' => Str::uuid(),
+                        'student_id' => $student->id,
+                        'subject_id' => $subject->id,
+                        'type' => $type,
+                        'value' => $value,
+                        'status' => NoteStatus::Pending,
+                        'created_by' => $admin->user_id,
+                    ]);
+                }
+            }
         }
-
-        // Étudiants non encore évalués sur la session courante : notes
-        // saisies mais pas publiées (PENDING), pour tester /latest-notes et
-        // l'exclusion de total_students dans /results.
-        foreach ($ungradedStudents as $student) {
-            Note::create([
-                'value'        => 12,
-                'status'       => NoteStatus::Presente,
-                'is_published' => false,
-                'published_at' => null,
-                'student_id'   => $student->id,
-                'subject_id'   => $algo->id,
-                'session_id'   => $currentSession->id,
-                'created_by'   => $author->user_id,
-            ]);
-        }
-
-        // Une absence justifiée, pour couvrir les valeurs de NoteStatus dans
-        // les données de démonstration. Portée par un étudiant "non gradé"
-        // pour ne pas dupliquer une note (student, subject, session) déjà
-        // créée ci-dessus — une absence justifiée n'a de toute façon aucun
-        // impact sur la moyenne (cf. Note::effectiveValue()).
-        if (isset($ungradedStudents[0])) {
-            Note::create([
-                'value'        => null,
-                'status'       => NoteStatus::AbsJustifiee,
-                'is_published' => true,
-                'published_at' => now()->subDays(3),
-                'student_id'   => $ungradedStudents[0]->id,
-                'subject_id'   => $bdd->id,
-                'session_id'   => $currentSession->id,
-                'created_by'   => $author->user_id,
-            ]);
-        }
-
-        // Notes sur la session passée : publiées maintenant, elles passeront
-        // à LOCKED une fois la session verrouillée (cf. run()).
-        foreach (array_slice($gradedStudents, 0, 4) as $student) {
-            $this->createPublishedNote($student, $algo, $pastSession, $author, 13, daysAgo: 200);
-        }
-    }
-
-    private function createPublishedNote(
-        Student $student,
-        Subject $subject,
-        ExamSession $session,
-        Teacher $author,
-        float $value,
-        int $daysAgo,
-    ): Note {
-        $note = Note::create([
-            'value'        => $value,
-            'status'       => NoteStatus::Presente,
-            'is_published' => true,
-            'published_at' => now()->subDays($daysAgo),
-            'student_id'   => $student->id,
-            'subject_id'   => $subject->id,
-            'session_id'   => $session->id,
-            'created_by'   => $author->user_id,
-        ]);
-
-        // Étale created_at sur plusieurs jours pour pouvoir tester le filtre
-        // from_date/to_date de /stats. saveQuietly() évite de redéclencher
-        // NoteObserver::updating() pour ce simple ajustement de date.
-        $note->forceFill(['created_at' => now()->subDays($daysAgo)])->saveQuietly();
-
-        return $note;
     }
 
     /**
@@ -342,49 +214,49 @@ class DashboardSeeder extends Seeder
     {
         $activities = [
             [
-                'title'       => 'Nouvelle matière ajoutée',
+                'title' => 'Nouvelle matière ajoutée',
                 'description' => "La matière « {$subjects[0]->name} » a été ajoutée.",
-                'type'        => NotificationType::NewSubject,
-                'is_read'     => true,
-                'daysAgo'     => 6,
+                'type' => NotificationType::NewSubject,
+                'is_read' => true,
+                'daysAgo' => 6,
             ],
             [
-                'title'       => 'Nouvel étudiant inscrit',
+                'title' => 'Nouvel étudiant inscrit',
                 'description' => "L'étudiant « {$students[0]->first_name} {$students[0]->last_name} » a été inscrit.",
-                'type'        => NotificationType::NewStudent,
-                'is_read'     => true,
-                'daysAgo'     => 5,
+                'type' => NotificationType::NewStudent,
+                'is_read' => true,
+                'daysAgo' => 5,
             ],
             [
-                'title'       => 'Notes importées',
+                'title' => 'Notes importées',
                 'description' => 'Un import de notes a été effectué pour la session normale 2025-2026.',
-                'type'        => NotificationType::NoteImportation,
-                'is_read'     => false,
-                'daysAgo'     => 3,
+                'type' => NotificationType::NoteImportation,
+                'is_read' => false,
+                'daysAgo' => 3,
             ],
             [
-                'title'       => 'Notes publiées',
+                'title' => 'Notes publiées',
                 'description' => 'Les notes de la session normale 2025-2026 ont été publiées.',
-                'type'        => NotificationType::NotePublished,
-                'is_read'     => false,
-                'daysAgo'     => 2,
+                'type' => NotificationType::NotePublished,
+                'is_read' => false,
+                'daysAgo' => 2,
             ],
             [
-                'title'       => 'Session verrouillée',
+                'title' => 'Session verrouillée',
                 'description' => 'La session normale 2024-2025 a été verrouillée.',
-                'type'        => NotificationType::NoteLocked,
-                'is_read'     => false,
-                'daysAgo'     => 0,
+                'type' => NotificationType::NoteLocked,
+                'is_read' => false,
+                'daysAgo' => 0,
             ],
         ];
 
         foreach ($activities as $activity) {
             Notification::create([
-                'title'       => $activity['title'],
+                'title' => $activity['title'],
                 'description' => $activity['description'],
-                'type'        => $activity['type'],
-                'is_read'     => $activity['is_read'],
-                'admin_id'    => $admin->id,
+                'type' => $activity['type'],
+                'is_read' => $activity['is_read'],
+                'admin_id' => $admin->id,
             ])->forceFill(['created_at' => now()->subDays($activity['daysAgo'])])->saveQuietly();
         }
     }

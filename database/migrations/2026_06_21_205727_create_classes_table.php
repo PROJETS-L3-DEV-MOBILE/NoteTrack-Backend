@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('classes', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('label');
+            $table->string('level');
             $table->integer('total_credits');
             $table->string('description')->nullable();
             $table->timestamps();

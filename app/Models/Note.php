@@ -2,30 +2,28 @@
 
 namespace App\Models;
 
-use App\Enums\NoteStatus;
-use App\Enums\SessionStatus;
-use App\Observers\NoteObserver;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Enums\NoteStatus;
+use App\Enums\NoteType;
 
-#[Fillable(['value', 'status', 'is_published', 'published_at', 'student_id', 'subject_id', 'session_id', 'created_by'])]
-#[ObservedBy(NoteObserver::class)]
+#[Fillable(['value', 'status', 'published_at', 'student_id', 'subject_id', 'created_by', 'type'])]
 class Note extends Model
 {
     use HasUuids;
 
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $casts = [
-        'status'       => NoteStatus::class,
-        'is_published' => 'boolean',
+        'status' => NoteStatus::class,
+        'type' => NoteType::class,
         'published_at' => 'datetime',
-        'value'        => 'decimal:2',
+        'value' => 'decimal:2',
     ];
 
     public function student(): BelongsTo
@@ -38,11 +36,6 @@ class Note extends Model
         return $this->belongsTo(Subject::class);
     }
 
-    public function session(): BelongsTo
-    {
-        return $this->belongsTo(ExamSession::class, 'session_id');
-    }
-
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -53,14 +46,17 @@ class Note extends Model
         return $this->hasMany(NoteHistory::class);
     }
 
-    // RG10 — valeur effective pour le calcul
     public function effectiveValue(): ?float
     {
-        return match ($this->status) {
-            NoteStatus::AbsInjustifiee => 0,     // comptée comme 0
-            NoteStatus::AbsJustifiee   => null,  // non comptée
-            NoteStatus::Presente       => (float) $this->value,
-        };
+        if ($this->status === NoteStatus::Pending) {
+            return null;
+        }
+
+        if ($this->value === -1) {
+            return 0;
+        }
+
+        return (float) $this->value;
     }
 
     // Fix #6 — RG03 : la matière est validée si la note effective atteint
@@ -75,20 +71,4 @@ class Note extends Model
 
         return $value >= (float) $this->subject->threshold;
     }
-
-    // Ajout — statut d'affichage utilisé par le dashboard admin (NotesTable),
-    // distinct de `status` (présence à l'examen) : reflète où en est la note
-    // dans le cycle de publication. LOCKED prime sur PUBLISHED/PENDING dès que
-    // la session est verrouillée (RG08), même si la note avait déjà été publiée.
-    public function publicationStatus(): string
-    {
-        $session = $this->relationLoaded('session') ? $this->session : $this->session()->first();
-
-        return match (true) {
-            $session?->status === SessionStatus::Verrouillee => 'LOCKED',
-            $this->is_published                              => 'PUBLISHED',
-            default                                           => 'PENDING',
-        };
-    }
-
 }
