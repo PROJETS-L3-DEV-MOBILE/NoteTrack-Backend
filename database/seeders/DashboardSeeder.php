@@ -42,7 +42,6 @@ class DashboardSeeder extends Seeder
 
             [$promotion, $students] = $this->seedStudents($admin, $classe, 3);
 
-            // --- NOUVEAU : SEED DES NOTES ---
             $this->seedNotes($admin, $subjects, $students);
 
             $this->seedNotifications($admin, $subjects, $students);
@@ -175,29 +174,59 @@ class DashboardSeeder extends Seeder
     }
 
     /**
-     * New method : Génère les notes pour chaque combinaison Étudiant / Matière / Type
+     * Generate notes while following correct flow (Test -> Exam -> Makeup if fail)
      *
      * @param  array<int, Subject>  $subjects
      * @param  array<int, Student>  $students
      */
     private function seedNotes(Admin $admin, array $subjects, array $students): void
     {
-        $mockValues = [14.5, 12.0, 08.5, 16.0, 10.0, -1];
+        $mockValues = [14.5, 12.0, 8.5, 16.0, 10.0, -1, 5.0, 7.5];
         $valueIndex = 0;
 
         foreach ($students as $student) {
             foreach ($subjects as $subject) {
-                foreach (NoteType::cases() as $type) {
-                    $value = $mockValues[$valueIndex % count($mockValues)];
+                $testValue = $mockValues[$valueIndex % count($mockValues)];
+                $valueIndex++;
+
+                Note::create([
+                    'id'         => Str::uuid(),
+                    'student_id' => $student->id,
+                    'subject_id' => $subject->id,
+                    'type'       => NoteType::Test,
+                    'value'      => $testValue,
+                    'status'     => NoteStatus::Pending,
+                    'created_by' => $admin->user_id,
+                ]);
+
+                $examValue = $mockValues[$valueIndex % count($mockValues)];
+                $valueIndex++;
+
+                Note::create([
+                    'id'         => Str::uuid(),
+                    'student_id' => $student->id,
+                    'subject_id' => $subject->id,
+                    'type'       => NoteType::Exam,
+                    'value'      => $examValue,
+                    'status'     => NoteStatus::Pending,
+                    'created_by' => $admin->user_id,
+                ]);
+
+                $realTestScore = max(0, $testValue);
+                $realExamScore = max(0, $examValue);
+                $totalScore = $realTestScore + $realExamScore;
+
+                if ($totalScore <= $subject->threshold) {
+                    $makeupValue = $mockValues[$valueIndex % count($mockValues)];
                     $valueIndex++;
 
                     Note::create([
-                        'id' => Str::uuid(),
+                        'id'         => Str::uuid(),
                         'student_id' => $student->id,
                         'subject_id' => $subject->id,
-                        'type' => $type,
-                        'value' => $value,
-                        'status' => NoteStatus::Pending,
+                        'type'       => NoteType::Makeup,
+                        'value'      => $makeupValue,
+                        'status'     => NoteStatus::Pending,
                         'created_by' => $admin->user_id,
                     ]);
                 }

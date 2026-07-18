@@ -52,16 +52,6 @@ class NoteController extends Controller
     {
         $this->authorize('update', new Note(['subject_id' => $subjectId]));
 
-        // Empêche les doublons pour le trio (Étudiant, Matière, Type)
-        $exists = Note::where('student_id', $request->student_id)
-            ->where('subject_id', $subjectId)
-            ->where('type', $request->type)
-            ->exists();
-
-        if ($exists) {
-            return response()->json(['message' => 'A note or absence already exists for this subject and type.'], 422);
-        }
-
         $note = new Note();
         $note->fill(array_merge($request->validated(), [
             'id'         => Str::uuid(),

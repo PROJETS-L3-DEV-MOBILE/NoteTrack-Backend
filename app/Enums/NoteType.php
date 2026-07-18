@@ -4,7 +4,7 @@ namespace App\Enums;
 
 enum NoteType: string
 {
-    case test = 'TEST';
-    case exam = 'EXAM';
+    case Test = 'TEST';
+    case Exam = 'EXAM';
     case Makeup = 'MAKEUP';
 }
