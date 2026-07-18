@@ -37,7 +37,8 @@ class ExamSession extends Model
     // RG08 — helpers de transition de statut
     public function publish(): void
     {
-        $this->update(['status' => SessionStatus::Publiee]);
+        $this->fill(['status' => SessionStatus::Publiee]);
+        $this->save();
 
         // RG04 : un étudiant ne voit ses notes qu'après publication officielle.
         // Sans cette cascade, is_published resterait à false sur chaque note
@@ -50,6 +51,7 @@ class ExamSession extends Model
 
     public function lock(): void
     {
-        $this->update(['status' => SessionStatus::Verrouillee]);
+        $this->fill(['status' => SessionStatus::Verrouillee]);
+        $this->save();
     }
 }
