@@ -23,6 +23,6 @@ class PromClass extends Model
 
     public function classe()
     {
-        return $this->belongsTo(Classes::class, 'class_id');
+        return $this->belongsTo(Classe::class, 'class_id');
     }
 }

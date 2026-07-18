@@ -8,11 +8,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable(['label', 'total_credits', 'description'])]
-class Classes extends Model
+class Classe extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $table = 'classes';
     protected $keyType = 'string';
     public $incrementing = false;
 

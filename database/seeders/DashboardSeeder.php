@@ -6,7 +6,7 @@ use App\Enums\NotificationType;
 use App\Enums\NoteStatus;
 use App\Enums\SessionStatus;
 use App\Models\Admin;
-use App\Models\Classes;
+use App\Models\Classe;
 use App\Models\ExamSession;
 use App\Models\Note;
 use App\Models\Notification;
@@ -151,7 +151,7 @@ class DashboardSeeder extends Seeder
         // PromotionSeeder) ; '2025-2026' provoquait une erreur SQL en mode
         // strict. Utilisation d'une année de cohorte simple, comme ailleurs.
         $promotion = Promotion::create(['label' => 'L3 Informatique', 'prom_year' => 2026]);
-        $classe = Classes::create([
+        $classe = Classe::create([
             'label'         => 'L3-INFO-A',
             'total_credits' => 60,
             'description'   => 'Classe unique de L3 Informatique',

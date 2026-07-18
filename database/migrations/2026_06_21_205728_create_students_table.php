@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('matricule')->unique();
             $table->string('number')->nullable();
             $table->string('email')->unique();
+            $table->foreignUuid('classe_id')->constrained('classes');
             $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignUuid('admin_id')->constrained('admins')->onDelete('cascade');
             $table->foreignUuid('prom_id')->constrained('promotions')->onDelete('cascade');
