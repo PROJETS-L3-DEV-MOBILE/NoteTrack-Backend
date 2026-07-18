@@ -102,7 +102,6 @@ class DashboardSeeder extends Seeder
             'label' => 'L3-Dev Web et Mobile',
             'total_credits' => 60,
             'description' => 'Licence 3, option Développement Web et Mobile',
-            'level' => 'L3',
         ]);
     }
 
