@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Admin\ClasseController;
 use App\Http\Controllers\Admin\NoteController;
+use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -76,5 +77,8 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
             Route::get('/latest-notes', [DashboardController::class, 'latestNotes']);
             Route::get('/recent-subjects', [DashboardController::class, 'recentSubjects']);
         });
+
+        // promotions
+        Route::apiResource('/promotions', PromotionController::class);
     });
 });
