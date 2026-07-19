@@ -60,6 +60,7 @@ class TeacherController extends Controller
     {
         $teacher = Teacher::with('user')->findOrFail($id);
         $teacher->full_name = $teacher->first_name . ' ' . $teacher->last_name;
+        $teacher->load('subjects');
 
         return response()->json($teacher, 200);
     }
