@@ -28,4 +28,14 @@ class Classe extends Model
     {
         return $this->hasManyThrough(Subject::class, UE::class, 'class_id', 'ue_id');
     }
+
+    public function students(): HasMany
+    {
+        return $this->hasMany(Student::class);
+    }
+
+    public function notes()
+    {
+        return $this->hasManyThrough(Note::class, Student::class);
+    }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Classe;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class ClasseController extends Controller
 {
@@ -15,10 +16,17 @@ class ClasseController extends Controller
      */
     public function index(): JsonResponse
     {
-        $classes = Classe::latest("created_at")->get();
+        $classes = Classe::latest("created_at")
+            ->withCount('students')
+            ->withAggregate('notes as average', DB::raw('AVG(CASE WHEN value = -1 THEN 0 ELSE value END)'))
+            ->get()
+            ->map(function ($classe) {
+                $classe->average = $classe->average !== null ? round((float) $classe->average, 2) : 0.0;
+                return $classe;
+            });
+
         return response()->json($classes, 200);
     }
-
     /**
      * Store a newly created resource in storage.
      * POST /api/classes

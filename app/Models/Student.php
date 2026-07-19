@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['first_name', 'last_name', 'matricule', 'number', 'user_id', 'admin_id', 'prom_id', 'classe_id', 'is_active'])]
@@ -50,6 +51,11 @@ class Student extends Model
     public function notes(): HasMany
     {
         return $this->hasMany(Note::class);
+    }
+
+    public function classe(): BelongsTo
+    {
+        return $this->belongsTo(Classe::class);
     }
 
     // Ajout : `image` vit sur `users` (un seul champ pour les 3 profils), pas sur
