@@ -67,8 +67,11 @@ class Student extends Model
     {
         return EloquentAttribute::make(
             get: function () {
-                $avg = $this->notes()->avg('value');
-                return $avg ? round($avg, 2) : 0.0;
+                $avg = $this->notes()
+                    ->selectRaw('AVG(CASE WHEN value = -1 THEN 0 ELSE value END) as aggregate')
+                    ->value('aggregate');
+
+                return $avg !== null ? round((float) $avg, 2) : 0.0;
             }
         );
     }
