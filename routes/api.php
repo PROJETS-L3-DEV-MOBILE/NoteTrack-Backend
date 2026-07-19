@@ -3,13 +3,13 @@
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\UEController;
-use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Admin\ClasseController;
 use App\Http\Controllers\Admin\NoteController;
 use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -36,14 +36,17 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
     // Admin Group
     Route::middleware('isAdmin')->prefix('admin')->group(function () {
 
-        // Users Management
-        Route::post('/teachers', [UserController::class, 'storeTeacher']);
+        // Teachers
+        Route::apiResource('/teachers', TeacherController::class);
 
         // Students
         Route::apiResource('/students', StudentController::class);
 
         // Classes
         Route::apiResource('classes', ClasseController::class);
+
+        // promotions
+        Route::apiResource('/promotions', PromotionController::class);
 
         // Notes
         Route::prefix('subjects/{subject_id}/notes')->group(function () {
@@ -77,8 +80,5 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
             Route::get('/latest-notes', [DashboardController::class, 'latestNotes']);
             Route::get('/recent-subjects', [DashboardController::class, 'recentSubjects']);
         });
-
-        // promotions
-        Route::apiResource('/promotions', PromotionController::class);
     });
 });
