@@ -14,12 +14,13 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('matricule')->unique();
             $table->string('number')->nullable();
-            $table->string('email')->unique();
+            $table->boolean('is_active')->default(true);
             $table->foreignUuid('classe_id')->constrained('classes');
             $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignUuid('admin_id')->constrained('admins')->onDelete('cascade');
+            $table->foreignUuid('admin_id')->constrained('admins');
             $table->foreignUuid('prom_id')->constrained('promotions')->onDelete('cascade');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

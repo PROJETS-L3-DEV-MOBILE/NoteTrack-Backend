@@ -15,8 +15,8 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->enum('role', ['admin', 'teacher', 'student']);
             $table->boolean('is_deleted')->default(false);
-            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -26,9 +26,9 @@ return new class extends Migration
         });
     }
 
-    public function down(): void {
+    public function down(): void
+    {
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
     }
-
 };

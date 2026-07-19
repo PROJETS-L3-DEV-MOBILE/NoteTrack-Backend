@@ -19,7 +19,6 @@ class AdminSeeder extends Seeder
 
         Admin::create([
             'username' => 'admin',
-            'email'    => $user->email,
             'user_id'  => $user->id,
         ]);
 
@@ -31,7 +30,6 @@ class AdminSeeder extends Seeder
 
         Admin::create([
             'username' => 'admin2',
-            'email'    => $user2->email,
             'user_id'  => $user2->id,
         ]);
     }

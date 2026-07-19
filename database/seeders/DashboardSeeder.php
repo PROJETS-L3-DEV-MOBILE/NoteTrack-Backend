@@ -60,7 +60,6 @@ class DashboardSeeder extends Seeder
 
         return Admin::create([
             'username' => 'admin.demo',
-            'email' => $user->email,
             'user_id' => $user->id,
         ]);
     }
@@ -88,7 +87,6 @@ class DashboardSeeder extends Seeder
             return Teacher::create([
                 'first_name' => $first,
                 'last_name' => $last,
-                'email' => $user->email,
                 'user_id' => $user->id,
                 'admin_id' => $admin->id,
             ]);
@@ -162,7 +160,6 @@ class DashboardSeeder extends Seeder
                 'last_name' => 'Démo',
                 'matricule' => sprintf('ETU-2026-%03d', $number),
                 'number' => $number,
-                'email' => $user->email,
                 'user_id' => $user->id,
                 'admin_id' => $admin->id,
                 'prom_id' => $promotion->id,

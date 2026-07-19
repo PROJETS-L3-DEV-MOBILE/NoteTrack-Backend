@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\{Note, Student, NoteHistory};
 use App\Enums\{NoteType, NoteStatus};
 use App\Http\Requests\NoteRequest;

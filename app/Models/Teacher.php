@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['first_name', 'last_name', 'email', 'user_id', 'admin_id'])]
+#[Fillable(['first_name', 'last_name', 'user_id', 'admin_id'])]
 class Teacher extends Model
 {
     use HasUniqueProfile, HasUuids;

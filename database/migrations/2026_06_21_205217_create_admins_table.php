@@ -11,7 +11,6 @@ return new class extends Migration
         Schema::create('admins', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('username');
-            $table->string('email')->unique();
             $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
