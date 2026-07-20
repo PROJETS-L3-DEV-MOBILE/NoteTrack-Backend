@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreTeacherRequest;
+use App\Http\Requests\UpdateTeacherRequest;
 use App\Models\Teacher;
 use App\Services\AccountCreationService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -68,17 +68,10 @@ class TeacherController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id): JsonResponse
+    public function update(UpdateTeacherRequest $request, string $id): JsonResponse
     {
+        $validatedData = $request->validated();
         $teacher = Teacher::findOrFail($id);
-
-        $validatedData = $request->validate([
-            'first_name' => ['nullable', 'string', 'max:255'],
-            'last_name' => ['nullable', 'string', 'max:255'],
-            'display_name' => ['nullable', 'string', 'max:255'],
-            'admin_id' => ['nullable', 'uuid', 'exists:admins,id'],
-            'email' => ['nullable', 'email', 'max:255', 'unique:users,email,' . $teacher->user_id],
-        ]);
 
         DB::transaction(function () use ($validatedData, $teacher) {
             if (isset($validatedData['email']) && $validatedData['email'] !== null) {
