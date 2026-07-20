@@ -51,7 +51,7 @@ class ClasseController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'label'         => 'required|string|max:255',
+            'label'         => 'required|string|max:255|unique:classes,label',
             'total_credits' => 'required|integer|min:0',
             'description'   => 'nullable|string|max:1000',
         ]);
@@ -77,30 +77,30 @@ class ClasseController extends Controller
      * Update the specified resource in storage.
      * PUT /api/classes/{classe}
      */
-    public function update(Request $request, Classe $classe): JsonResponse
+    public function update(Request $request, Classe $class): JsonResponse
     {
         $validated = $request->validate([
-            'label'         => 'required|string|max:255',
-            'total_credits' => 'required|integer|min:0',
+            'label'         => 'nullable|string|max:255|unique:classes,label,' . $class->id,
+            'total_credits' => 'nullable|integer|min:0',
             'description'   => 'nullable|string|max:1000',
         ]);
 
-        $classe->fill($validated);
-        $classe->save();
+        $class->update($validated);
 
-        return response()->json($classe, 200);
+        return response()->json($class, 200);
     }
 
     /**
      * Remove the specified resource from storage.
      * DELETE /api/classes/{classe}
      */
-    public function destroy(Classe $classe): JsonResponse
+    public function destroy(Classe $class): JsonResponse
     {
-        $classe->destroy($classe->id);
+        $class->delete();
+
         return response()->json([
             "status" => "success",
             "message" => "Classe deleted successfully."
-        ]);
+        ], 200);
     }
 }

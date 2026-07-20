@@ -34,7 +34,7 @@ class NoteController extends Controller
             ],
             'notes' => collect(NoteType::cases())->mapWithKeys(function ($type) use ($student) {
                 $note = $student->notes->firstWhere('type', $type);
-                
+
                 if ($note === null) return [];
 
                 return [strtolower($type->value) => [
@@ -104,8 +104,7 @@ class NoteController extends Controller
             ]);
             $history->save();
 
-            $note->fill($request->validated());
-            $note->save();
+            $note->update($request->validated());
         });
 
         return response()->json($note->load('histories'), 200);

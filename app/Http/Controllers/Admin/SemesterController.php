@@ -49,7 +49,7 @@ class SemesterController extends Controller
         );
         $semester = Semester::findOrFail($id);
 
-        $updatedSemester = $semester->fill(["label" => $data['label']]);
+        $updatedSemester = $semester->update(["label" => $data['label']]);
         return response()->json($updatedSemester, 200);
     }
 
