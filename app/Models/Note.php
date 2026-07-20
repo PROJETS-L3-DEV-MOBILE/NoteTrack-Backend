@@ -64,6 +64,14 @@ class Note extends Model
         return (float) $this->value;
     }
 
+    // Fix : méthode attendue par LatestNoteResource (voir son commentaire
+    // "voir Note::publicationStatus()") mais jamais définie sur le modèle —
+    // simple exposition de status pour rester explicite côté resource.
+    public function publicationStatus(): string
+    {
+        return $this->status->value;
+    }
+
     // Fix #6 — RG03 : la matière est validée si la note effective atteint
     // le seuil défini sur Subject (10/20 par défaut, personnalisable par matière).
     public function isValidated(): bool

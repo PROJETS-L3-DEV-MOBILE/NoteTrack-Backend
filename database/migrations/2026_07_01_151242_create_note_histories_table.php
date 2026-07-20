@@ -14,6 +14,7 @@ return new class extends Migration
             $table->decimal('old_value', 4, 2)->nullable();
             $table->decimal('new_value', 4, 2)->nullable();
             $table->foreignUuid('changed_by')->constrained('users')->cascadeOnDelete(); // RG05
+            $table->foreignId('school_year_id')->nullable();
             $table->timestamp('changed_at')->useCurrent();
         });
     }

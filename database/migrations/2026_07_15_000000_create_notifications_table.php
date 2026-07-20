@@ -10,13 +10,12 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('title');
-            $table->text('description');
-            // Stocké en string, casté en NotificationType côté modèle (cf. Note::status
-            // qui suit le même schéma avec NoteStatus).
             $table->string('type');
-            $table->boolean('is_read')->default(false);
-            $table->foreignUuid('admin_id')->nullable()->constrained('admins')->nullOnDelete();
+            // uuidMorphs (et non morphs) car les notifiables (ex. Admin) ont
+            // des clés primaires UUID (HasUuids).
+            $table->uuidMorphs('notifiable');
+            $table->text('data');
+            $table->timestamp('read_at')->nullable();
             $table->timestamps();
         });
     }

@@ -68,16 +68,17 @@ class Student extends Model
         );
     }
 
+    // Fix : cet accessor calculait auparavant un simple AVG() SQL sur toutes
+    // les notes (tous statuts, tous types confondus, sans coefficient), ce
+    // qui divergeait de GradeCalculatorService::generalAverage() utilisée par
+    // le dashboard — un même étudiant pouvait donc afficher deux moyennes
+    // différentes selon l'écran. On route maintenant par le même service
+    // pour n'avoir qu'une seule formule dans toute l'application (RG02,
+    // TEST 50% / EXAM 50%, MAKEUP prioritaire, notes publiées uniquement).
     protected function average(): EloquentAttribute
     {
         return EloquentAttribute::make(
-            get: function () {
-                $avg = $this->notes()
-                    ->selectRaw('AVG(CASE WHEN value = -1 THEN 0 ELSE value END) as aggregate')
-                    ->value('aggregate');
-
-                return $avg !== null ? round((float) $avg, 2) : 0.0;
-            }
+            get: fn () => app(\App\Services\GradeCalculatorService::class)->generalAverage($this) ?? 0.0,
         );
     }
 

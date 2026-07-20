@@ -7,7 +7,6 @@ use App\Enums\NoteType;
 use App\Enums\NoteStatus;
 use App\Models\Admin;
 use App\Models\Classe;
-use App\Models\Notification;
 use App\Models\Note;
 use App\Models\Promotion;
 use App\Models\Semester;
@@ -16,6 +15,7 @@ use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\UE;
 use App\Models\User;
+use App\Notifications\DashboardActivityNotification;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -234,6 +234,20 @@ class DashboardSeeder extends Seeder
                 }
             }
         }
+
+        // Publie toutes les notes générées ci-dessus, en cohérence avec la
+        // notification "Notes publiées" créée dans seedNotifications()
+        // (session normale 2025-2026, il y a 2 jours). Sans ça, published_at
+        // reste null et status reste PENDING pour toutes les notes : le stat
+        // card "published_notes" et le chart "/results" restent bloqués à 0,
+        // car GradeCalculatorService::subjectEffectiveValue() n'exploite que
+        // les notes au statut Published (RG04).
+        Note::query()
+            ->whereIn('student_id', collect($students)->pluck('id'))
+            ->update([
+                'status'       => NoteStatus::Published,
+                'published_at' => now()->subDays(2),
+            ]);
     }
 
     /**
@@ -281,13 +295,23 @@ class DashboardSeeder extends Seeder
         ];
 
         foreach ($activities as $activity) {
-            Notification::create([
-                'title' => $activity['title'],
-                'description' => $activity['description'],
-                'type' => $activity['type'],
-                'is_read' => $activity['is_read'],
-                'admin_id' => $admin->id,
-            ])->forceFill(['created_at' => now()->subDays($activity['daysAgo'])])->saveQuietly();
+            $admin->notify(new DashboardActivityNotification(
+                $activity['title'],
+                $activity['description'],
+                $activity['type'],
+            ));
+
+            // ->notify() horodate au moment de l'envoi ; on recale created_at
+            // (et read_at pour les activités marquées comme lues) sur la
+            // chronologie voulue pour la démo, comme le faisait l'ancien
+            // ->forceFill(...)->saveQuietly().
+            $sentAt = now()->subDays($activity['daysAgo']);
+
+            $admin->notifications()->latest('created_at')->first()->forceFill([
+                'created_at' => $sentAt,
+                'updated_at' => $sentAt,
+                'read_at'    => $activity['is_read'] ? $sentAt : null,
+            ])->saveQuietly();
         }
     }
 }

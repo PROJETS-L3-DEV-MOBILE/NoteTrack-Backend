@@ -2,13 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\ExamSession;
+use App\Enums\NoteStatus;
+use App\Models\Admin;
 use App\Models\Note;
-use App\Models\Notification;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Teacher;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -41,8 +42,10 @@ class DashboardService
                 ->whereHas('subjects', fn (Builder $q) => $q->where('is_available', true))
                 ->count(),
 
+            // Fix (suppression ExamSession) : "publiée" se lit maintenant sur
+            // Note::status plutôt que sur une colonne is_published inexistante.
             'published_notes' => $this->applyDateRange(
-                Note::query()->where('is_published', true),
+                Note::query()->where('status', NoteStatus::Published),
                 'published_at',
                 $fromDate,
                 $toDate,
@@ -55,14 +58,23 @@ class DashboardService
      * moyenne générale de chaque étudiant (GradeCalculatorService) et
      * catégorisée via les mêmes seuils que GradeCalculatorService::mention().
      *
-     * Hypothèses (non explicitées dans le cahier des charges) :
-     * - "school_year" filtre sur ExamSession::year ; à défaut, la session
-     *   d'examen la plus récemment créée est utilisée.
-     * - "level" filtre sur le libellé de la classe (Classes::label) associée
-     *   à la promotion de l'étudiant ; "class_id" filtre directement sur
-     *   l'identifiant de cette classe.
-     * - Seuls les étudiants ayant une moyenne calculable sur la session
-     *   retenue (donc "évalués") sont comptabilisés dans total_students.
+     * Fix (suppression ExamSession) : il n'y a plus de session d'examen à
+     * résoudre — GradeCalculatorService calcule directement sur les matières
+     * de la classe de l'étudiant.
+     *
+     * Hypothèses :
+     * - "school_year" filtre sur Promotion::prom_year, par cohérence avec
+     *   StudentController/StudentResource qui utilisent déjà ce champ sous ce
+     *   même nom "school_year" (et non le nouveau modèle SchoolYear, qui
+     *   n'est pour l'instant référencé que par Note::school_year_id et
+     *   Promotion::school_year_id, sans usage de filtrage ailleurs dans le
+     *   code). À confirmer si le nouveau modèle SchoolYear doit à terme
+     *   remplacer Promotion::prom_year partout, dashboard inclus.
+     * - "level" filtre sur le libellé de la classe (Classe::label) via
+     *   Student::classe_id / Student::classe().
+     * - "class_id" filtre directement sur Student::classe_id.
+     * - Seuls les étudiants ayant une moyenne calculable (donc "évalués")
+     *   sont comptabilisés dans total_students.
      */
     public function results(?string $level, ?string $classId, ?string $schoolYear): array
     {
@@ -74,19 +86,13 @@ class DashboardService
             'excellent'    => 0,
         ];
 
-        $session = $this->resolveSession($schoolYear);
-
-        if (! $session) {
-            return [...$buckets, 'total_passed' => 0, 'total_students' => 0];
-        }
-
-        $students = $this->studentsQuery($level, $classId)->get();
+        $students = $this->studentsQuery($level, $classId, $schoolYear)->get();
 
         foreach ($students as $student) {
-            $average = $this->gradeCalculator->generalAverage($student, $session);
+            $average = $this->gradeCalculator->generalAverage($student);
 
             if ($average === null) {
-                continue; // pas encore évalué sur cette session
+                continue; // pas encore évalué
             }
 
             match ($this->gradeCalculator->mention($average)) {
@@ -109,11 +115,18 @@ class DashboardService
     }
 
     /**
-     * Activités récentes (RecentActivitiesSection), basées sur Notification.
+     * Activités récentes (RecentActivitiesSection), basées sur le système de
+     * notifications natif de Laravel (App\Notifications\DashboardActivityNotification,
+     * envoyées à des Admin via ->notify()).
+     *
+     * Le flux n'est pas propre à un admin précis (vue globale du dashboard),
+     * d'où la lecture directe sur DatabaseNotification plutôt que via la
+     * relation $admin->notifications() d'une seule instance.
      */
     public function recentActivities(int $limit = 10): Collection
     {
-        return Notification::query()
+        return DatabaseNotification::query()
+            ->where('notifiable_type', Admin::class)
             ->latest('created_at')
             ->limit($limit)
             ->get();
@@ -121,11 +134,14 @@ class DashboardService
 
     /**
      * Dernières notes saisies (NotesTable), basées sur Note + Student.
+     *
+     * Fix (suppression ExamSession) : l'eager-load 'session' est retiré, Note
+     * n'a plus de relation vers une session d'examen.
      */
     public function latestNotes(int $limit = 10): Collection
     {
         return Note::query()
-            ->with(['student.user', 'subject.teacher.user', 'session'])
+            ->with(['student.user', 'subject.teacher.user'])
             ->latest('created_at')
             ->limit($limit)
             ->get();
@@ -143,32 +159,17 @@ class DashboardService
             ->get();
     }
 
-    private function resolveSession(?string $schoolYear): ?ExamSession
-    {
-        // Fix : deux sessions créées lors du même seed (donc au même created_at
-        // à la seconde près) rendaient ce tri instable — ->latest('created_at')
-        // seul ne garantit aucun ordre en cas d'égalité, et pouvait donc
-        // retourner une session plus ancienne que prévu comme "la plus
-        // récente". Les uuid générés par HasUuids étant ordonnés par date de
-        // création (à la microseconde près), trier aussi par id lève
-        // l'ambiguïté de façon fiable.
-        return ExamSession::query()
-            ->when($schoolYear, fn (Builder $q) => $q->where('year', $schoolYear))
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
-            ->first();
-    }
-
-    private function studentsQuery(?string $level, ?string $classId): Builder
+    private function studentsQuery(?string $level, ?string $classId, ?string $schoolYear): Builder
     {
         return Student::query()
-            ->when($classId, fn (Builder $q) => $q->whereHas(
-                'promotion.classes',
-                fn (Builder $q) => $q->where('class_id', $classId),
-            ))
+            ->when($classId, fn (Builder $q) => $q->where('classe_id', $classId))
             ->when($level, fn (Builder $q) => $q->whereHas(
-                'promotion.classes.classe',
+                'classe',
                 fn (Builder $q) => $q->where('label', $level),
+            ))
+            ->when($schoolYear, fn (Builder $q) => $q->whereHas(
+                'promotion',
+                fn (Builder $q) => $q->where('prom_year', $schoolYear),
             ));
     }
 

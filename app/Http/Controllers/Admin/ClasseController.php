@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Classe;
+use App\Services\GradeCalculatorService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 
 class ClasseController extends Controller
 {
+    public function __construct(
+        protected GradeCalculatorService $gradeCalculator,
+    ) {}
+
     /**
      * Display a listing of the resource.
      * GET /api/classes
@@ -18,14 +22,27 @@ class ClasseController extends Controller
     {
         $classes = Classe::latest("created_at")
             ->withCount('students')
-            ->withAggregate('notes as average', DB::raw('AVG(CASE WHEN value = -1 THEN 0 ELSE value END)'))
+            ->with('students')
             ->get()
             ->map(function ($classe) {
-                $classe->average = $classe->average !== null ? round((float) $classe->average, 2) : 0.0;
+                $classe->average = $this->classAverage($classe);
                 return $classe;
             });
 
         return response()->json($classes, 200);
+    }
+
+    private function classAverage(Classe $classe): float
+    {
+        $averages = $classe->students
+            ->map(fn ($student) => $this->gradeCalculator->generalAverage($student))
+            ->filter(fn (?float $average) => $average !== null);
+
+        if ($averages->isEmpty()) {
+            return 0.0;
+        }
+
+        return round($averages->avg(), 2);
     }
     /**
      * Store a newly created resource in storage.

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['note_id', 'old_value', 'new_value', 'changed_by', 'changed_at'])]
+#[Fillable(['note_id', 'old_value', 'new_value', 'changed_by', 'changed_at', 'school_year_id'])]
 class NoteHistory extends Model
 {
     use HasUuids;
@@ -30,5 +30,10 @@ class NoteHistory extends Model
     public function changedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'changed_by');
+    }
+
+    public function schoolYear(): BelongsTo
+    {
+        return $this->belongsTo(SchoolYear::class);
     }
 }
