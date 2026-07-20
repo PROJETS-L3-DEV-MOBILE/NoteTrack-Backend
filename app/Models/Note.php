@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Enums\NoteStatus;
 use App\Enums\NoteType;
 
-#[Fillable(['value', 'status', 'published_at', 'student_id', 'subject_id', 'created_by', 'type'])]
+#[Fillable(['value', 'status', 'published_at', 'student_id', 'subject_id', 'created_by', 'type', 'school_year_id'])]
 class Note extends Model
 {
     use HasUuids;
@@ -39,6 +39,11 @@ class Note extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function schoolYear(): BelongsTo
+    {
+        return $this->belongsTo(SchoolYear::class);
     }
 
     public function histories(): HasMany

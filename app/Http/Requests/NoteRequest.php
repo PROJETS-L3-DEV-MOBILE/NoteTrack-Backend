@@ -23,6 +23,7 @@ class NoteRequest extends FormRequest
                 'type'       => ['required', new Enum(NoteType::class)],
                 'value'      => 'required|numeric|between:-1,20',
                 'status'     => ['nullable', new Enum(NoteStatus::class)],
+                'school_year_id' => ['required', 'int', 'exists:school_years,id']
             ];
         }
 
@@ -30,6 +31,7 @@ class NoteRequest extends FormRequest
             'value'  => 'required|numeric|between:-1,20',
             'status' => ['nullable', new Enum(NoteStatus::class)],
             'type'   => ['nullable', new Enum(NoteType::class)],
+            'school_year_id' => ['nullable', 'int', 'exists:school_years,id']
         ];
     }
 

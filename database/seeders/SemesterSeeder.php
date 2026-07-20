@@ -15,7 +15,8 @@ class SemesterSeeder extends Seeder
 {
     public function run(): void
     {
-        Semester::firstOrCreate(['semester_number' => 1]);
-        Semester::firstOrCreate(['semester_number' => 2]);
+        for ($i = 1; $i <= 10; $i++) {
+            Semester::create(['label' => "Semestre $i"]);
+        }
     }
 }

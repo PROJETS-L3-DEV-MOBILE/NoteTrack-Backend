@@ -3,20 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
-#[Fillable(['semester_number'])]
+#[Fillable(['label'])]
 class Semester extends Model
 {
-    use HasUuids;
-
-    protected $keyType = 'string';
-    public $incrementing = false;
-
-    public function notes(): HasMany
+    public function subjects(): HasMany
     {
         return $this->hasMany(Note::class);
+    }
+
+    public function notes(): HasManyThrough
+    {
+        return $this->hasManyThrough(Note::class, Subject::class);
     }
 }

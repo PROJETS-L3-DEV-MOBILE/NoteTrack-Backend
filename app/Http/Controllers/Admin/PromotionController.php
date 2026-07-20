@@ -13,7 +13,7 @@ class PromotionController extends Controller
      */
     public function index()
     {
-        $promotions = Promotion::all();
+        $promotions = Promotion::all()->load('schoolYear');
         return response()->json($promotions, 200);
     }
 
@@ -35,16 +35,16 @@ class PromotionController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(int $id)
     {
         $promotion = Promotion::findOrFail($id);
-        return response()->json($promotion, 200);
+        return response()->json($promotion->load('schoolYear'), 200);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, int $id)
     {
         $validatedData = $request->validate([
             'label' => ['nullable', 'string', 'max:255', 'unique:promotions,label,' . $id],
@@ -70,7 +70,7 @@ class PromotionController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(int $id)
     {
         $promotion = Promotion::findOrFail($id);
 

@@ -34,13 +34,14 @@ class NoteController extends Controller
             ],
             'notes' => collect(NoteType::cases())->mapWithKeys(function ($type) use ($student, $request) {
                 $note = $student->notes->firstWhere('type', $type);
-                $canView = $note && $request->user()->can('view', $note);
+                if ($note === null) return [];
 
-                return [strtolower($type->value) => $canView ? [
+                return [strtolower($type->value) => [
                     'id'     => $note->id,
                     'value'  => (float) $note->value,
-                    'status' => $note->status->value
-                ] : null];
+                    'status' => $note->status->value,
+                    'school_year' => $note->schoolYear
+                ]];
             })->toArray()
         ]), 200);
     }
@@ -59,7 +60,8 @@ class NoteController extends Controller
             'subject_id' => $subjectId,
             'status'     => NoteStatus::Pending,
             'type'      => $request->type,
-            'created_by' => $request->user()->id
+            'created_by' => $request->user()->id,
+            'school_year_id' => $request->school_year_id
         ]));
         $note->save();
 
@@ -96,6 +98,7 @@ class NoteController extends Controller
                 'old_value'  => $note->value,
                 'new_value'  => $request->value,
                 'changed_by' => $request->user()->id,
+                'school_year_id' => $request->school_year_id,
                 'changed_at' => now()
             ]);
             $history->save();

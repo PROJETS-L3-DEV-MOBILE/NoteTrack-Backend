@@ -107,9 +107,6 @@ class StudentController extends Controller
 
             return $student;
         });
-
-        return response()->json($updatedStudent, 200);
-
         return response()->json($updatedStudent->load('user'), 200);
     }
 

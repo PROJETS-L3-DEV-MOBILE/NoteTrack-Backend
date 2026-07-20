@@ -16,6 +16,7 @@ return new class extends Migration
             $table->enum('status', array_column(NoteStatus::cases(), 'value'))->default(NoteStatus::Pending->value);
             $table->enum('type', array_column(NoteType::cases(), 'value'));
             $table->timestamp('published_at')->nullable();
+            $table->foreignId('school_year_id');
             $table->foreignUuid('student_id')->constrained('students')->cascadeOnDelete();
             $table->foreignUuid('subject_id')->constrained('subjects')->cascadeOnDelete();
             $table->foreignUuid('created_by')->constrained('users')->cascadeOnDelete();

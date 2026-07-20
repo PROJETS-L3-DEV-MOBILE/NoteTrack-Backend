@@ -113,7 +113,7 @@ class UEAndSubjectManagementTest extends TestCase
                     '*' => [
                         'id', 'name', 'credits', 'coefficient', 'threshold',
                         'teacher_id', 'teacher' => ['display_name'],
-                        'semester_id', 'semester' => ['semester_number'],
+                        'semester_id', 'semester' => ['label'],
                     ],
                 ]],
             ]],

@@ -27,7 +27,7 @@ class Subject extends Model
     }
 
     // Ajout : cf. `semester_id` sur create_subjects_table — nécessaire pour
-    // exposer `subject.semester.semester_number` (GET /admin/subjects)
+    // exposer `subject.semester.label` (GET /admin/subjects)
     // et valider `createSubjectSchema.semester_id`.
     public function semester(): BelongsTo
     {

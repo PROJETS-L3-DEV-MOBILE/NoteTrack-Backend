@@ -9,6 +9,8 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Admin\ClasseController;
 use App\Http\Controllers\Admin\NoteController;
 use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\Admin\SchoolYearController;
+use App\Http\Controllers\Admin\SemesterController;
 use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Http\Request;
@@ -47,6 +49,12 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
 
         // promotions
         Route::apiResource('/promotions', PromotionController::class);
+
+        // School years
+        Route::apiResource('/school-years', SchoolYearController::class);
+
+        // Semesters
+        Route::apiResource('/semesters', SemesterController::class);
 
         // Notes
         Route::prefix('subjects/{subject_id}/notes')->group(function () {

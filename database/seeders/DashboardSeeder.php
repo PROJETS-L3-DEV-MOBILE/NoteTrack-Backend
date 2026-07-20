@@ -116,7 +116,7 @@ class DashboardSeeder extends Seeder
             'admin_id' => $admin->id,
         ]);
 
-        $semester = Semester::firstOrCreate(['semester_number' => 1]);
+        $semester = Semester::firstOrCreate(['label' => 'Semestre 1']);
 
         $subjectsData = [
             ['name' => 'Algorithmique', 'credits' => 3, 'coefficient' => 2, 'teacher' => $teachers[0]],
@@ -146,6 +146,7 @@ class DashboardSeeder extends Seeder
         $promotion = Promotion::create([
             'label' => 'L3 Informatique',
             'prom_year' => 2026,
+            'school_year_id' => 1
         ]);
 
         $students = collect(range(1, $count))->map(function (int $number) use ($admin, $promotion, $classe) {
@@ -194,6 +195,7 @@ class DashboardSeeder extends Seeder
                     'value'      => $testValue,
                     'status'     => NoteStatus::Pending,
                     'created_by' => $admin->user_id,
+                    'school_year_id' => 1,
                 ]);
 
                 $examValue = $mockValues[$valueIndex % count($mockValues)];
@@ -206,6 +208,7 @@ class DashboardSeeder extends Seeder
                     'type'       => NoteType::Exam,
                     'value'      => $examValue,
                     'status'     => NoteStatus::Pending,
+                    'school_year_id' => 1,
                     'created_by' => $admin->user_id,
                 ]);
 
@@ -225,6 +228,7 @@ class DashboardSeeder extends Seeder
                         'value'      => $makeupValue,
                         'status'     => NoteStatus::Pending,
                         'created_by' => $admin->user_id,
+                        'school_year_id' => 1,
                     ]);
                 }
             }

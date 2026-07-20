@@ -25,7 +25,8 @@ class SubjectResource extends JsonResource
             ],
             'semester_id' => $this->semester_id,
             'semester'    => [
-                'semester_number' => $this->semester?->semester_number,
+                'id' => $this->semester?->id,
+                'label' => $this->semester?->label
             ],
         ];
     }
