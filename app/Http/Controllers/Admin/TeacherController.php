@@ -75,6 +75,7 @@ class TeacherController extends Controller
         $validatedData = $request->validate([
             'first_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['nullable', 'string', 'max:255'],
+            'display_name' => ['nullable', 'string', 'max:255'],
             'admin_id' => ['nullable', 'uuid', 'exists:admins,id'],
             'email' => ['nullable', 'email', 'max:255', 'unique:users,email,' . $teacher->user_id],
         ]);

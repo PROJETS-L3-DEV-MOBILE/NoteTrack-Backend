@@ -16,6 +16,7 @@ class StoreTeacherRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name'  => ['required', 'string', 'max:255'],
+            'display_name' => ['nullable', 'string', 'max:255'],
             'email'      => ['required', 'email', 'unique:users,email'],
         ];
     }

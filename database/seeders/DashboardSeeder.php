@@ -89,6 +89,7 @@ class DashboardSeeder extends Seeder
                 'last_name' => $last,
                 'user_id' => $user->id,
                 'admin_id' => $admin->id,
+                'display_name' => "$first $last"
             ]);
         })->all();
     }

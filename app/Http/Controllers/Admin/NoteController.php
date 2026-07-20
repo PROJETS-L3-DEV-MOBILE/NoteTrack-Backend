@@ -32,8 +32,9 @@ class NoteController extends Controller
                 'matricule' => $student->matricule,
                 'full_name' => "{$student->first_name} {$student->last_name}",
             ],
-            'notes' => collect(NoteType::cases())->mapWithKeys(function ($type) use ($student, $request) {
+            'notes' => collect(NoteType::cases())->mapWithKeys(function ($type) use ($student) {
                 $note = $student->notes->firstWhere('type', $type);
+                
                 if ($note === null) return [];
 
                 return [strtolower($type->value) => [
