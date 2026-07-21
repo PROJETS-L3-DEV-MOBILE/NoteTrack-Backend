@@ -16,10 +16,10 @@ class NoteController extends Controller
     use AuthorizesRequests;
 
     /**
-     * GET /admin/subjects/{subject_id}/notes
+     * GET /notes/subjects/{subject_id}
      * Liste complète des étudiants avec l'état de leurs notes imbriquées pour une matière.
      */
-    public function indexBySubject(Request $request, string $subjectId): JsonResponse
+    public function indexBySubject(string $subjectId): JsonResponse
     {
 
         $this->authorize('viewBySubject', [Note::class, $subjectId]);
@@ -48,7 +48,7 @@ class NoteController extends Controller
     }
 
     /**
-     * POST /admin/subjects/{subject_id}/notes
+     * POST /notes/subjects/{subject_id}
      * Saisie standard d'une note ou d'une absence (value: -1).
      */
     public function store(NoteRequest $request, string $subjectId): JsonResponse
@@ -70,7 +70,7 @@ class NoteController extends Controller
     }
 
     /**
-     * GET /admin/notes/{note_id}
+     * GET /notes/{note_id}
      */
     public function show(Note $note): JsonResponse
     {
@@ -80,7 +80,7 @@ class NoteController extends Controller
     }
 
     /**
-     * PUT/PATCH /admin/notes/{note_id}
+     * PUT/PATCH /notes/{note_id}
      * Modification manuelle avec historisation.
      */
     public function update(NoteRequest $request, Note $note): JsonResponse
@@ -111,7 +111,7 @@ class NoteController extends Controller
     }
 
     /**
-     * PATCH /admin/notes/{note_id}/publish
+     * PATCH /notes/{note_id}/publish
      */
     public function publish(Note $note): JsonResponse
     {
@@ -131,7 +131,7 @@ class NoteController extends Controller
     }
 
     /**
-     * PATCH /admin/subjects/{subject_id}/notes/publish
+     * PATCH /notes/subjects/{subject_id}/publish
      * Bulk — Publication en masse de toutes les notes PENDING de la matière.
      */
     public function bulkPublish(string $subjectId): JsonResponse
@@ -146,7 +146,7 @@ class NoteController extends Controller
     }
 
     /**
-     * PATCH /admin/notes/{note_id}/lock
+     * PATCH /notes/{note_id}/lock
      */
     public function lock(Note $note): JsonResponse
     {
@@ -163,7 +163,7 @@ class NoteController extends Controller
     }
 
     /**
-     * PATCH /admin/subjects/{subject_id}/notes/lock
+     * PATCH /notes/subjects/{subject_id}/lock
      * Bulk — Verrouillage en masse de toutes les notes PUBLISHED de la matière.
      */
     public function bulkLock(string $subjectId): JsonResponse
@@ -179,7 +179,7 @@ class NoteController extends Controller
     }
 
     /**
-     * DELETE /admin/notes/{note_id}
+     * DELETE /notes/{note_id}
      */
     public function destroy(Note $note): JsonResponse
     {

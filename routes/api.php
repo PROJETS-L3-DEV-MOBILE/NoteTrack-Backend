@@ -39,10 +39,7 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
 
     // Teacher group
     Route::middleware('isTeacher')->prefix('teacher')->group(function () {
-        // dashboard
         Route::get('/dashboard/stats', [TeacherDashboardController::class, 'stats']);
-
-        // subjects
         Route::get('/subjects', [TeacherController::class, 'subjects']);
     });
 
@@ -69,9 +66,6 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
                 Route::patch('/', [NoteController::class, 'update']);
                 Route::delete('/', [NoteController::class, 'destroy']);
             });
-
-            // ressource
-            Route::apiResource('notes', NoteController::class)->only(['show', 'update', 'destroy']);
         });
 
     // Admin Group
@@ -94,21 +88,6 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
 
         // Semesters
         Route::apiResource('/semesters', SemesterController::class);
-
-        // Notes
-        Route::prefix('subjects/{subject_id}/notes')->group(function () {
-            Route::get('/', [NoteController::class, 'indexBySubject']);
-            Route::post('/', [NoteController::class, 'store']);
-            Route::patch('/publish', [NoteController::class, 'bulkPublish']);
-            Route::patch('/lock', [NoteController::class, 'bulkLock']);
-        });
-
-        Route::prefix('notes/{note}')->group(function () {
-            Route::patch('/publish', [NoteController::class, 'publish']);
-            Route::patch('/lock', [NoteController::class, 'lock']);
-        });
-
-        Route::apiResource('notes', NoteController::class)->only(['show', 'update', 'destroy']);
 
         // Subjects
         Route::prefix('subjects')->group(function () {
