@@ -41,7 +41,7 @@ class DashboardController extends Controller
     public function recentActivities(Request $request): JsonResponse
     {
         $notifications = $this->dashboard->recentActivities(
-            (int) $request->integer('limit', 10)
+            (int) $request->integer('limit', 8)
         );
 
         return response()->json(NotificationResource::collection($notifications));
@@ -50,7 +50,7 @@ class DashboardController extends Controller
     public function latestNotes(Request $request): JsonResponse
     {
         $notes = $this->dashboard->latestNotes(
-            (int) $request->integer('limit', 10)
+            (int) $request->integer('limit', 5)
         );
 
         return response()->json(LatestNoteResource::collection($notes));
@@ -59,7 +59,7 @@ class DashboardController extends Controller
     public function recentSubjects(Request $request): JsonResponse
     {
         $subjects = $this->dashboard->recentSubjects(
-            (int) $request->integer('limit', 10)
+            (int) $request->integer('limit', 5)
         );
 
         return response()->json(RecentSubjectResource::collection($subjects));
