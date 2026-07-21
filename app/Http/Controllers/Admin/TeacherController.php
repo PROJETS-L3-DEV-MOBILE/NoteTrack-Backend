@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreTeacherRequest;
 use App\Http\Requests\UpdateTeacherRequest;
 use App\Http\Resources\TeacherResource;
+use App\Http\Resources\TeacherSubjectsResource;
 use App\Models\Teacher;
 use App\Services\AccountCreationService;
+use App\Services\TeacherSubjectsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +18,10 @@ use Illuminate\Support\Facades\DB;
 class TeacherController extends Controller
 {
 
-    public function __construct(protected AccountCreationService $accountCreationService) {}
+    public function __construct(
+        protected AccountCreationService $accountCreationService,
+        protected TeacherSubjectsService $teacherSubjectsService
+    ) {}
 
     /**
      * Display a listing of the resource.
@@ -50,6 +55,7 @@ class TeacherController extends Controller
 
         return response()->json($teachers, 200);
     }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -131,5 +137,19 @@ class TeacherController extends Controller
         return response()->json([
             'message' => 'Teacher deleted.'
         ], 200);
+    }
+
+    /**
+     * List teacher subjects with TeacherSubjectsResource details
+     * GET /teachers/subjects
+     */
+    public function subjects(Request $request): JsonResponse
+    {
+        /** @var \App\Models\Teacher $teacher */
+        $teacher = $request->user()->teacher ?? $request->user();
+
+        $groupedSubjects = $this->teacherSubjectsService->getGroupedSubjects($teacher);
+
+        return response()->json(TeacherSubjectsResource::collection($groupedSubjects), 200);
     }
 }

@@ -33,7 +33,7 @@ class DashboardController extends Controller
 
         return response()->json($this->dashboard->results(
             $data['level'] ?? null,
-            $data['class_id'] ?? null,
+            $data['classe_id'] ?? null,
             $data['school_year'] ?? null,
         ));
     }

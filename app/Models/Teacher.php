@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasUniqueProfile;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute as EloquentAttribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -44,17 +43,24 @@ class Teacher extends Model
         );
     }
 
-
     public function subjects(): HasMany
     {
         return $this->hasMany(Subject::class);
     }
 
-    protected function classes(): Attribute
+    public function classes()
     {
-        return Attribute::make(
-            get: fn() => Classe::whereHas('ues.subjects', fn($q) => $q->where('teacher_id', $this->id))->get()
-        );
+        return Classe::whereHas('ues.subjects', fn($q) => $q->where('teacher_id', $this->id));
+    }
+
+    public function notes(): HasManyThrough
+    {
+        return $this->hasManyThrough(Note::class, Subject::class);
+    }
+
+    public function students()
+    {
+        return Student::whereHas('classe.ues.subjects', fn($q) => $q->where('teacher_id', $this->id));
     }
 
     // Ajout : `image` vit sur `users` (un seul champ pour les 3 profils), pas

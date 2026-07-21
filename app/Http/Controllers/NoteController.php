@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\{Note, Student, NoteHistory};
@@ -113,7 +113,7 @@ class NoteController extends Controller
     /**
      * PATCH /admin/notes/{note_id}/publish
      */
-    public function publish(Request $request, Note $note): JsonResponse
+    public function publish(Note $note): JsonResponse
     {
         $this->authorize('update', $note);
 

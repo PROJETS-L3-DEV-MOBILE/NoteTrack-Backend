@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['code', 'label', 'color', 'class_id', 'admin_id'])]
+#[Fillable(['code', 'label', 'color', 'classe_id', 'admin_id'])]
 class UE extends Model
 {
     use HasUuids;
@@ -30,11 +30,11 @@ class UE extends Model
     }
 
     // Ajout : lien vers le niveau (classe) auquel appartient l'UE — nécessaire
-    // pour le regroupement par niveau de GET /admin/subjects. Cf. `class_id`
+    // pour le regroupement par niveau de GET /admin/subjects. Cf. `classe_id`
     // sur create_ues_table.
     public function classe(): BelongsTo
     {
-        return $this->belongsTo(Classe::class, 'class_id');
+        return $this->belongsTo(Classe::class, 'classe_id');
     }
 
     // Ajout : "credits" (doc: somme des crédits des matières de l'UE) est un

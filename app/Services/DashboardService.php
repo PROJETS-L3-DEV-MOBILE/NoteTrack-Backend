@@ -72,7 +72,7 @@ class DashboardService
      *   remplacer Promotion::prom_year partout, dashboard inclus.
      * - "level" filtre sur le libellé de la classe (Classe::label) via
      *   Student::classe_id / Student::classe().
-     * - "class_id" filtre directement sur Student::classe_id.
+     * - "classe_id" filtre directement sur Student::classe_id.
      * - Seuls les étudiants ayant une moyenne calculable (donc "évalués")
      *   sont comptabilisés dans total_students.
      */

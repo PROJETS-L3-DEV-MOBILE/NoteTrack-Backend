@@ -6,8 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-//creation du middleware pour verifier si role admin
-class IsAdmin
+class IsTeacher
 {
     /**
      * Handle an incoming request.
@@ -24,7 +23,7 @@ class IsAdmin
             ], 401);
         }
 
-        if ($user->role !== 'admin') {
+        if ($user->role !== 'teacher') {
             return response()->json([
                 'message' => 'Forbidden',
             ], 403);

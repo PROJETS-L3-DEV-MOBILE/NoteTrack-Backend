@@ -7,12 +7,13 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Admin\ClasseController;
-use App\Http\Controllers\Admin\NoteController;
 use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Admin\SchoolYearController;
 use App\Http\Controllers\Admin\SemesterController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TeacherController;
+use App\Http\Controllers\NoteController;
+use App\Http\Controllers\Teacher\TeacherDashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +36,44 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
         return $user;
     });
 
+
+    // Teacher group
+    Route::middleware('isTeacher')->prefix('teacher')->group(function () {
+        // dashboard
+        Route::get('/dashboard/stats', [TeacherDashboardController::class, 'stats']);
+
+        // subjects
+        Route::get('/subjects', [TeacherController::class, 'subjects']);
+    });
+
+    // Notes
+    // authorization is via NotePolicy, no need for middleware
+    Route::middleware(['auth:sanctum'])
+        ->prefix('notes')
+        ->group(function () {
+
+            // index / store / bulck actions
+            Route::prefix('subject/{subject_id}')->group(function () {
+                Route::get('/', [NoteController::class, 'indexBySubject']);
+                Route::post('/', [NoteController::class, 'store']);
+                Route::patch('/publish', [NoteController::class, 'bulkPublish']);
+                Route::patch('/lock', [NoteController::class, 'bulkLock']);
+            });
+
+            // unitary lock / publish / patch
+            Route::prefix('{note}')->group(function () {
+                Route::patch('/publish', [NoteController::class, 'publish']);
+                Route::patch('/lock', [NoteController::class, 'lock']);
+                Route::get('/', [NoteController::class, 'show']);
+                Route::put('/', [NoteController::class, 'update']);
+                Route::patch('/', [NoteController::class, 'update']);
+                Route::delete('/', [NoteController::class, 'destroy']);
+            });
+
+            // ressource
+            Route::apiResource('notes', NoteController::class)->only(['show', 'update', 'destroy']);
+        });
+
     // Admin Group
     Route::middleware('isAdmin')->prefix('admin')->group(function () {
 
@@ -45,7 +84,7 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
         Route::apiResource('/students', StudentController::class);
 
         // Classes
-        Route::apiResource('classes', ClasseController::class);
+        Route::apiResource('/classes', ClasseController::class);
 
         // promotions
         Route::apiResource('/promotions', PromotionController::class);
