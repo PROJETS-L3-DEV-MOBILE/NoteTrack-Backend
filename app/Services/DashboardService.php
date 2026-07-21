@@ -115,18 +115,22 @@ class DashboardService
     }
 
     /**
-     * Activités récentes (RecentActivitiesSection), basées sur le système de
-     * notifications natif de Laravel (App\Notifications\DashboardActivityNotification,
-     * envoyées à des Admin via ->notify()).
+     * Activités récentes non lues (RecentActivitiesSection), basées sur le
+     * système de notifications natif de Laravel
+     * (App\Notifications\DashboardActivityNotification, envoyées à des Admin
+     * via ->notify()).
      *
      * Le flux n'est pas propre à un admin précis (vue globale du dashboard),
      * d'où la lecture directe sur DatabaseNotification plutôt que via la
      * relation $admin->notifications() d'une seule instance.
+     *
+     * Seules les notifications non lues (read_at null) sont retournées.
      */
     public function recentActivities(int $limit = 10): Collection
     {
         return DatabaseNotification::query()
             ->where('notifiable_type', Admin::class)
+            ->whereNull('read_at')
             ->latest('created_at')
             ->limit($limit)
             ->get();
