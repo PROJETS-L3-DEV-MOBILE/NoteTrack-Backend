@@ -26,7 +26,7 @@ class TeacherResource extends JsonResource
             'added_by' => [
                 'id' => $this->admin?->id,
                 'username' => $this->admin?->username,
-                'email' => $this->admin?->email,
+                'email' => $this->admin?->user?->email,
             ],
         ];
     }

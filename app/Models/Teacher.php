@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasUniqueProfile;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute as EloquentAttribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 #[Fillable(['first_name', 'last_name', 'user_id', 'admin_id', 'display_name'])]
 class Teacher extends Model
@@ -31,9 +32,29 @@ class Teacher extends Model
 
     // Ajout : relation inverse de Subject::teacher(), absente jusqu'ici mais
     // nécessaire pour déterminer les enseignants "actifs" du dashboard.
+    public function ues(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Ue::class,      // final model
+            Subject::class, // intermediate model
+            'teacher_id',   // f key in 'subjects' (to teachers)
+            'id',           // p key in 'ues'
+            'id',           // p key in 'teachers'
+            'ue_id'         // f key in 'subjects' (to ues)
+        );
+    }
+
+
     public function subjects(): HasMany
     {
         return $this->hasMany(Subject::class);
+    }
+
+    protected function classes(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => Classe::whereHas('ues.subjects', fn($q) => $q->where('teacher_id', $this->id))->get()
+        );
     }
 
     // Ajout : `image` vit sur `users` (un seul champ pour les 3 profils), pas

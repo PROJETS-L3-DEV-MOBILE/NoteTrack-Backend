@@ -26,13 +26,16 @@ class TeacherController extends Controller
         $sort = TeacherSortEnum::tryFrom($request->query('sort')) ?? TeacherSortEnum::CreationDate;
 
         $query = Teacher::query()
-            ->with(['user', 'admin'])
+            ->select('teachers.*')
+            ->selectRaw("CONCAT(first_name, ' ', last_name) as full_name")
+            ->with(['user', 'admin.user'])
+            ->withCount('subjects')
             ->withCount([
-                'subjects',
-                'classes' => fn($q) => $q->distinct()
-            ])
-            ->select('*')
-            ->selectRaw("CONCAT(first_name, ' ', last_name) as full_name");
+                'subjects as classes_count' => function ($q) {
+                    $q->selectRaw('COUNT(DISTINCT ues.class_id)')
+                        ->join('ues', 'subjects.ue_id', '=', 'ues.id');
+                }
+            ]);
 
         match ($sort) {
             TeacherSortEnum::NameAZ => $query->orderBy('full_name', 'asc'),
@@ -47,7 +50,6 @@ class TeacherController extends Controller
 
         return response()->json($teachers, 200);
     }
-
     /**
      * Store a newly created resource in storage.
      */
