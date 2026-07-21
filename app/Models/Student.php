@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['first_name', 'last_name', 'matricule', 'number', 'user_id', 'admin_id', 'prom_id', 'classe_id', 'is_active'])]
+#[Fillable(['first_name', 'last_name', 'matricule', 'user_id', 'admin_id', 'prom_id', 'classe_id', 'is_active', 'number'])]
 class Student extends Model
 {
     use HasUniqueProfile, HasUuids, SoftDeletes;
@@ -78,7 +78,7 @@ class Student extends Model
     protected function average(): EloquentAttribute
     {
         return EloquentAttribute::make(
-            get: fn () => app(\App\Services\GradeCalculatorService::class)->generalAverage($this) ?? 0.0,
+            get: fn() => app(\App\Services\GradeCalculatorService::class)->generalAverage($this) ?? 0.0,
         );
     }
 

@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Http\Requests\Admin\StoreStudentRequest;
 use App\Http\Requests\Admin\UpdateStudentRequest;
 use App\Http\Resources\StudentResource;
+use App\Models\Classe;
 use App\Services\AccountCreationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -57,6 +58,9 @@ class StudentController extends Controller
         $admin = $request->user()->admin;
 
         $student = DB::transaction(function () use ($data, $admin) {
+            Classe::where('id', $data['classe_id'])->lockForUpdate()->first();
+            $nextNumber = Student::where('classe_id', $data['classe_id'])->count() + 1;
+
             $user = $this->accountCreation->createUserWithCredentials(
                 email: $data['email'],
                 role: 'student',
@@ -64,12 +68,13 @@ class StudentController extends Controller
 
             return Student::create([
                 ...$data,
-                'user_id'  => $user->id,
-                'admin_id' => $admin->id,
+                'user_id'   => $user->id,
+                'admin_id'  => $admin->id,
+                'number'    => $nextNumber,
             ]);
         });
 
-        return response()->json($student, 200);
+        return response()->json($student, 201);
     }
 
     /**

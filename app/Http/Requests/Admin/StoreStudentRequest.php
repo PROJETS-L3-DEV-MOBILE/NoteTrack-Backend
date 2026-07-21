@@ -20,7 +20,6 @@ class StoreStudentRequest extends FormRequest
             'matricule'  => ['required', 'string', 'unique:students,matricule'],
             'classe_id'  => ['required', 'uuid', 'exists:classes,id'],
             'prom_id'    => ['required', 'integer', 'exists:promotions,id'],
-            'number'     => ['nullable', 'string'],
         ];
     }
 }

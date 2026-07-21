@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('matricule')->unique();
-            $table->string('number')->nullable();
+            $table->integer('number');
             $table->boolean('is_active')->default(true);
             $table->foreignUuid('classe_id')->constrained('classes');
             $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
