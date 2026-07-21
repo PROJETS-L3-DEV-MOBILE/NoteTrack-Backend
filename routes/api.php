@@ -36,7 +36,6 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
         return $user;
     });
 
-
     // Teacher group
     Route::middleware('isTeacher')->prefix('teacher')->group(function () {
         Route::get('/dashboard/stats', [TeacherDashboardController::class, 'stats']);
@@ -49,7 +48,7 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
         ->prefix('notes')
         ->group(function () {
 
-            // index / store / bulck actions
+            // bulk index,update / unique store
             Route::prefix('subject/{subject_id}')->group(function () {
                 Route::get('/', [NoteController::class, 'indexBySubject']);
                 Route::post('/', [NoteController::class, 'store']);
@@ -57,10 +56,11 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
                 Route::patch('/lock', [NoteController::class, 'bulkLock']);
             });
 
-            // unitary lock / publish / patch
+            // unitary show / lock / publish / patch
             Route::prefix('{note}')->group(function () {
                 Route::patch('/publish', [NoteController::class, 'publish']);
                 Route::patch('/lock', [NoteController::class, 'lock']);
+
                 Route::get('/', [NoteController::class, 'show']);
                 Route::put('/', [NoteController::class, 'update']);
                 Route::patch('/', [NoteController::class, 'update']);

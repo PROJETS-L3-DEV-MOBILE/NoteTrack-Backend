@@ -24,15 +24,27 @@ class TeacherDashboardController extends Controller
             'to_date'   => ['nullable', 'date', 'after_or_equal:from_date'],
         ]);
 
-        $fromDate = $validated['from_date'] ?? Carbon::now()->startOfMonth()->toIso8601String();
-        $toDate   = $validated['to_date']   ?? Carbon::now()->endOfDay()->toIso8601String();
+        $inputFrom = $validated['from_date'] ?? null;
+        $inputTo   = $validated['to_date']   ?? null;
+
+        $fromDate = $inputFrom
+            ? Carbon::parse($inputFrom)->startOfDay()
+            : Carbon::now()->startOfMonth()->startOfDay();
+
+        $toDate = $inputTo
+            ? Carbon::parse($inputTo)->endOfDay()
+            : Carbon::now()->endOfDay();
+
+        if ($toDate->lt($fromDate)) {
+            $fromDate = (clone $toDate)->startOfMonth();
+        }
 
         $teacher = $request->user()->teacher;
 
         $stats = $this->dashboardService->getStats(
             teacher: $teacher,
-            fromDate: $fromDate,
-            toDate: $toDate
+            fromDate: $fromDate->toIso8601String(),
+            toDate: $toDate->toIso8601String()
         );
 
         return new TeacherDashboardResource($stats);

@@ -69,7 +69,7 @@ class StudentController extends Controller
             ]);
         });
 
-        return response()->json($student, 201);
+        return response()->json($student, 200);
     }
 
     /**

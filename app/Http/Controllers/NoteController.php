@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\{Note, Student, NoteHistory};
 use App\Enums\{NoteType, NoteStatus};
 use App\Http\Requests\NoteRequest;
-use Illuminate\Http\{JsonResponse, Request};
+use Illuminate\Http\{JsonResponse};
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;

@@ -19,7 +19,7 @@ class StoreStudentRequest extends FormRequest
             'email'      => ['required', 'email', 'unique:users,email'],
             'matricule'  => ['required', 'string', 'unique:students,matricule'],
             'classe_id'  => ['required', 'uuid', 'exists:classes,id'],
-            'prom_id'    => ['required', 'uuid', 'exists:promotions,id'],
+            'prom_id'    => ['required', 'integer', 'exists:promotions,id'],
             'number'     => ['nullable', 'string'],
         ];
     }

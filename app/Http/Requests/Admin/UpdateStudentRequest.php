@@ -19,7 +19,7 @@ class UpdateStudentRequest extends FormRequest
             'email'      => ['nullable', 'email', 'unique:users,email'],
             'matricule'  => ['nullable', 'string', 'unique:students,matricule'],
             'classe_id'  => ['nullable', 'uuid', 'exists:classes,id'],
-            'prom_id'    => ['nullable', 'uuid', 'exists:promotions,id'],
+            'prom_id'    => ['nullable', 'integer', 'exists:promotions,id'],
             'number'     => ['nullable', 'string'],
             'is_active'  => ['nullable', 'boolean']
         ];
