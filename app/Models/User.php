@@ -10,11 +10,19 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Notifications\Notifiable; 
+use Illuminate\Notifications\Notifiable;
 
 #[Fillable(['email', 'password', 'image', 'role'])]
-#[Hidden(['password', 'admin', 'student', 'teacher','created_at',
-            'updated_at','deleted_at','is_deleted'])]
+#[Hidden([
+    'password',
+    'admin',
+    'student',
+    'teacher',
+    'created_at',
+    'updated_at',
+    'deleted_at',
+    'is_deleted'
+])]
 class User extends Authenticatable
 {
     use HasApiTokens, HasUuids, Notifiable, SoftDeletes;
@@ -40,11 +48,25 @@ class User extends Authenticatable
     protected function profile(): EloquentAttribute
     {
         return EloquentAttribute::make(
-            get: fn () => match ($this->role) {
-                'admin'   => $this->admin,
-                'teacher' => $this->teacher,
-                'student' => $this->student,
-            },
+            get: function () {
+                $profile = match ($this->role) {
+                    'admin'   => $this->admin,
+                    'teacher' => $this->teacher,
+                    'student' => $this->student,
+                    default   => null,
+                };
+
+                if (!$profile) {
+                    return null;
+                }
+
+                $profile->username = match ($this->role) {
+                    'admin' => $profile->username,
+                    default => trim("{$profile->first_name} {$profile->last_name}"),
+                };
+
+                return $profile;
+            }
         );
     }
 }
