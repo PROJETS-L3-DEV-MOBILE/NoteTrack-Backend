@@ -15,7 +15,7 @@ class UpdateUERequest extends FormRequest
     {
         return [
             'name'     => ['required', 'string', 'min:1', 'max:255'],
-            'class_id' => ['required', 'string', 'exists:classes,id'],
+            'classe_id' => ['required', 'string', 'exists:classes,id'],
             'color'    => ['required', 'string', 'min:1', 'max:255'],
         ];
     }

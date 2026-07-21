@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
@@ -21,12 +22,12 @@ class Classe extends Model
     // (feature Subjects/UE). Ne touche à rien de la gestion des classes.
     public function ues(): HasMany
     {
-        return $this->hasMany(UE::class, 'class_id');
+        return $this->hasMany(UE::class, 'classe_id');
     }
 
     public function subjects(): HasManyThrough
     {
-        return $this->hasManyThrough(Subject::class, UE::class, 'class_id', 'ue_id');
+        return $this->hasManyThrough(Subject::class, UE::class, 'classe_id', 'ue_id');
     }
 
     public function students(): HasMany

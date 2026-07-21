@@ -29,7 +29,7 @@ class SubjectService
 
     /**
      * Création d'une UE (createUESchema). `data` attendu en snake_case :
-     * name, class_id, color.
+     * name, classe_id, color.
      */
     public function createUE(array $data, Admin $admin): UE
     {
@@ -37,7 +37,7 @@ class SubjectService
             'code'     => $this->generateUniqueCode($data['name']),
             'label'    => $data['name'],
             'color'    => $data['color'],
-            'class_id' => $data['class_id'],
+            'classe_id' => $data['classe_id'],
             'admin_id' => $admin->id,
         ])->fresh();
     }
@@ -47,7 +47,7 @@ class SubjectService
         $ue->update([
             'label'    => $data['name'],
             'color'    => $data['color'],
-            'class_id' => $data['class_id'],
+            'classe_id' => $data['classe_id'],
         ]);
 
         return $ue->fresh();

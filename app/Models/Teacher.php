@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute as EloquentAttribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['first_name', 'last_name', 'user_id', 'admin_id', 'display_name'])]
@@ -41,7 +42,7 @@ class Teacher extends Model
     protected function image(): EloquentAttribute
     {
         return EloquentAttribute::make(
-            get: fn () => $this->user?->image,
+            get: fn() => $this->user?->image,
         );
     }
 }

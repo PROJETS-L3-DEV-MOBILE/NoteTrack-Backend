@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Http\Requests\Admin\StoreStudentRequest;
 use App\Http\Requests\Admin\UpdateStudentRequest;
@@ -28,7 +29,7 @@ class StudentController extends Controller
                         ->orWhere('matricule', 'like', "%{$search}%");
                 });
             })
-            ->when($request->class_id, fn($q, $classId) => $q->where('classe_id', $classId))
+            ->when($request->classe_id, fn($q, $classId) => $q->where('classe_id', $classId))
             ->when($request->school_year, function ($q, $year) {
                 $q->whereHas('promotion', fn($sub) => $sub->where('prom_year', $year));
             })

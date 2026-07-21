@@ -16,6 +16,17 @@ class UEController extends Controller
         protected SubjectService $subjects,
     ) {}
 
+    /** 
+     * GET /admin/ues
+     *
+     */
+    public function index(): JsonResponse
+    {
+        $ues = UE::all();
+        return response()->json($ues, 200);
+    }
+
+
     /**
      * POST /admin/ues
      */

@@ -16,7 +16,7 @@ class ResultsFilterRequest extends FormRequest
         return [
             // Libellé de la classe (Classes::label), ex. "L1", "L2"...
             'level'       => ['nullable', 'string'],
-            'class_id'    => ['nullable', 'uuid', 'exists:classes,id'],
+            'classe_id'    => ['nullable', 'uuid', 'exists:classes,id'],
             'school_year' => ['nullable', 'string'],
         ];
     }

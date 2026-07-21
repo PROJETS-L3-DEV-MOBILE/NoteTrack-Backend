@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\TeacherSortEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreTeacherRequest;
 use App\Http\Requests\UpdateTeacherRequest;
+use App\Http\Resources\TeacherResource;
 use App\Models\Teacher;
 use App\Services\AccountCreationService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class TeacherController extends Controller
@@ -18,13 +21,29 @@ class TeacherController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $teachers = Teacher::with('user')
+        $sort = TeacherSortEnum::tryFrom($request->query('sort')) ?? TeacherSortEnum::CreationDate;
+
+        $query = Teacher::query()
+            ->with(['user', 'admin'])
+            ->withCount([
+                'subjects',
+                'classes' => fn($q) => $q->distinct()
+            ])
             ->select('*')
-            ->selectRaw("CONCAT(first_name, ' ', last_name) as full_name")
-            ->latest('created_at')
-            ->get();
+            ->selectRaw("CONCAT(first_name, ' ', last_name) as full_name");
+
+        match ($sort) {
+            TeacherSortEnum::NameAZ => $query->orderBy('full_name', 'asc'),
+            TeacherSortEnum::NameZA => $query->orderBy('full_name', 'desc'),
+            TeacherSortEnum::CreationDate => $query->orderBy('created_at', 'asc'),
+        };
+
+        $perPage = (int) $request->query('per_page', 20);
+
+        $teachers = $query->paginate($perPage)
+            ->through(fn($teacher) => new TeacherResource($teacher));
 
         return response()->json($teachers, 200);
     }

@@ -11,8 +11,8 @@ use App\Http\Controllers\Admin\NoteController;
 use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Admin\SchoolYearController;
 use App\Http\Controllers\Admin\SemesterController;
+use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TeacherController;
-use App\Http\Controllers\StudentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -77,7 +77,7 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
         });
 
         // UEs & Nested Subjects
-        Route::apiResource('ues', UEController::class)->only(['store', 'update', 'destroy']);
+        Route::apiResource('ues', UEController::class);
         Route::apiResource('ues.subjects', SubjectController::class)->scoped()->only(['store', 'update', 'destroy']);
 
         // Dashboard

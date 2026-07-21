@@ -113,7 +113,7 @@ class DashboardSeeder extends Seeder
             'code' => 'UE-INFO-501',
             'label' => 'Génie Logiciel',
             'color' => '#4F46E5',
-            'class_id' => $classe->id,
+            'classe_id' => $classe->id,
             'admin_id' => $admin->id,
         ]);
 

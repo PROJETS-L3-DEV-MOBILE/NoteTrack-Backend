@@ -55,7 +55,7 @@ class GradeCalculatorService
     {
         return Subject::query()
             ->where('is_available', true)
-            ->whereHas('ue', fn ($q) => $q->where('class_id', $student->classe_id))
+            ->whereHas('ue', fn ($q) => $q->where('classe_id', $student->classe_id))
             ->get();
     }
 

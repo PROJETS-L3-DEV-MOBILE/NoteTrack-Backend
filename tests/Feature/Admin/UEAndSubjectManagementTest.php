@@ -75,7 +75,7 @@ class UEAndSubjectManagementTest extends TestCase
 
         $response = $this->postJson('/api/admin/ues', [
             'name'     => 'Informatique Fondamentale',
-            'class_id' => $classe->id,
+            'classe_id' => $classe->id,
             'color'    => 'violet',
         ]);
 
@@ -89,7 +89,7 @@ class UEAndSubjectManagementTest extends TestCase
 
         $response = $this->postJson('/api/admin/ues', [
             'name'     => 'Informatique Fondamentale',
-            'class_id' => $classe->id,
+            'classe_id' => $classe->id,
             'color'    => 'violet',
         ]);
 
@@ -137,7 +137,7 @@ class UEAndSubjectManagementTest extends TestCase
 
         $response = $this->postJson('/api/admin/ues', [
             'name'     => 'Informatique Fondamentale',
-            'class_id' => $classe->id,
+            'classe_id' => $classe->id,
             'color'    => 'violet', // non-hex volontaire : valide depuis le fix (doc = string, min:1)
         ]);
 
@@ -149,7 +149,7 @@ class UEAndSubjectManagementTest extends TestCase
 
         $this->assertDatabaseHas('ues', [
             'label'    => 'Informatique Fondamentale',
-            'class_id' => $classe->id,
+            'classe_id' => $classe->id,
         ]);
     }
 
@@ -160,21 +160,21 @@ class UEAndSubjectManagementTest extends TestCase
         $response = $this->postJson('/api/admin/ues', []);
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['name', 'class_id', 'color']);
+        $response->assertJsonValidationErrors(['name', 'classe_id', 'color']);
     }
 
-    public function test_ue_creation_fails_with_unknown_class_id(): void
+    public function test_ue_creation_fails_with_unknown_classe_id(): void
     {
         $this->actingAsAdmin();
 
         $response = $this->postJson('/api/admin/ues', [
             'name'     => 'Informatique Fondamentale',
-            'class_id' => '00000000-0000-0000-0000-000000000000',
+            'classe_id' => '00000000-0000-0000-0000-000000000000',
             'color'    => '#4F46E5',
         ]);
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['class_id']);
+        $response->assertJsonValidationErrors(['classe_id']);
     }
 
     // ---------------------------------------------------------------
@@ -188,7 +188,7 @@ class UEAndSubjectManagementTest extends TestCase
 
         $response = $this->putJson("/api/admin/ues/{$ue->id}", [
             'name'     => 'Génie Logiciel Avancé',
-            'class_id' => Classe::first()->id,
+            'classe_id' => Classe::first()->id,
             'color'    => '#111111',
         ]);
 
@@ -202,7 +202,7 @@ class UEAndSubjectManagementTest extends TestCase
 
         $response = $this->putJson('/api/admin/ues/00000000-0000-0000-0000-000000000000', [
             'name'     => 'X',
-            'class_id' => Classe::first()->id,
+            'classe_id' => Classe::first()->id,
             'color'    => '#111111',
         ]);
 

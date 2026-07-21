@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('code')->unique();  // ex: GIFL23IPOO
             $table->string('label');
             $table->string('color');
-            $table->foreignUuid('class_id')->nullable()->constrained('classes')->cascadeOnDelete();
+            $table->foreignUuid('classe_id')->nullable()->constrained('classes')->cascadeOnDelete();
             $table->foreignUuid('admin_id')->constrained('admins')->cascadeOnDelete();
             $table->timestamps();
         });
