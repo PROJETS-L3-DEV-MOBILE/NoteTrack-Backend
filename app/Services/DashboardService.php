@@ -163,7 +163,7 @@ class DashboardService
             ->get();
     }
 
-    private function studentsQuery(?string $level, ?string $classId, ?string $schoolYear): Builder
+    private function studentsQuery(?string $level, ?string $classId, ?int $schoolYearId): Builder
     {
         return Student::query()
             ->when($classId, fn (Builder $q) => $q->where('classe_id', $classId))
@@ -171,9 +171,9 @@ class DashboardService
                 'classe',
                 fn (Builder $q) => $q->where('label', $level),
             ))
-            ->when($schoolYear, fn (Builder $q) => $q->whereHas(
+            ->when($schoolYearId, fn (Builder $q) => $q->whereHas(
                 'promotion',
-                fn (Builder $q) => $q->where('prom_year', $schoolYear),
+                fn (Builder $q) => $q->where('school_year_id', $schoolYearId),
             ));
     }
 

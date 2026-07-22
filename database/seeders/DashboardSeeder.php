@@ -146,7 +146,6 @@ class DashboardSeeder extends Seeder
     {
         $promotion = Promotion::create([
             'label' => 'L3 Informatique',
-            'prom_year' => 2026,
             'school_year_id' => 1
         ]);
 

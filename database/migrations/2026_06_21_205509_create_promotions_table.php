@@ -11,7 +11,6 @@ return new class extends Migration
         Schema::create('promotions', function (Blueprint $table) {
             $table->id();
             $table->string('label');
-            $table->integer('prom_year');
             $table->foreignId('school_year_id');
             $table->timestamps();
         });

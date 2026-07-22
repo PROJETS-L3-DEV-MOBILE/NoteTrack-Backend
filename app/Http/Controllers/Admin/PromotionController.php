@@ -24,7 +24,7 @@ class PromotionController extends Controller
     {
         $validatedData = $request->validate([
             'label' => ['required', 'string', 'max:255', 'unique:promotions,label'],
-            'prom_year' => ['required', 'string', 'max:50'],
+            'school_year_id' => ['required', 'integer', 'exists:school_years,id'],
         ]);
 
         $promotion = Promotion::create($validatedData);
@@ -48,7 +48,7 @@ class PromotionController extends Controller
     {
         $validatedData = $request->validate([
             'label' => ['nullable', 'string', 'max:255', 'unique:promotions,label,' . $id],
-            'prom_year' => ['nullable', 'string', 'max:50'],
+            'school_year_id' => ['nullable', 'integer', 'exists:school_years,id'],
         ]);
 
         $promotion = Promotion::findOrFail($id);

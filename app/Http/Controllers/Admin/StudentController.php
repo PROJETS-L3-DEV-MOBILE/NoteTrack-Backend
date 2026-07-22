@@ -33,7 +33,7 @@ class StudentController extends Controller
                 });
             })
             ->when($request->classe_id, fn($q, $classId) => $q->where('classe_id', $classId))
-            ->when($request->school_year, function ($q, $schoolYearId) {
+            ->when($request->school_year_id, function ($q, $schoolYearId) {
                 $q->whereHas('promotion', fn($sub) => $sub->where('school_year_id', $schoolYearId));
             })
             ->paginate($request->query('limit', 15));

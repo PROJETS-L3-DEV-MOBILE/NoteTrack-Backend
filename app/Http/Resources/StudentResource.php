@@ -20,7 +20,7 @@ class StudentResource extends JsonResource
             'image' => $this->image,
             'matricule' => $this->matricule,
             'promotion' => $this->promotion?->label ?? 'N/A',
-            'school_year' => $this->promotion?->prom_year ?? 'N/A',
+            'school_year' => $this->promotion?->schoolYear ?? 'N/A',
             'status' => $this->is_active ? 'ACTIVE' : 'SUSPENDED',
             'average' => $this->average,
             'mention' => $this->mention,

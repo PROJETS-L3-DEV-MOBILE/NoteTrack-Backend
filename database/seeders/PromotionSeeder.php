@@ -14,7 +14,6 @@ class PromotionSeeder extends Seeder
     {
         Promotion::create([
             'label'    => 'PROM HAVANA',
-            'prom_year' => 2025,
             'school_year_id' => 1,
         ]);
     }
