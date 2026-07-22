@@ -26,9 +26,7 @@ class LatestNoteResource extends JsonResource
                 'full_name' => trim("{$this->student->first_name} {$this->student->last_name}"),
             ],
             'subject_name'         => $this->subject->name,
-            'teacher_display_name' => $this->subject->teacher
-                ? trim("{$this->subject->teacher->first_name} {$this->subject->teacher->last_name}")
-                : null,
+            'teacher_display_name' => $this->subject->teacher->display_name,
             'teacher_image' => $this->subject->teacher?->image,
             'date' => $this->created_at?->toIso8601String(),
         ];

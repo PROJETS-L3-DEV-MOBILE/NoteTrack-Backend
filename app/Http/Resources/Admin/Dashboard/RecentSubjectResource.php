@@ -16,9 +16,7 @@ class RecentSubjectResource extends JsonResource
             'subject_name'         => $this->name,
             'credits'              => $this->credits,
             'coefficient'          => $this->coefficient,
-            'teacher_display_name' => $this->teacher
-                ? trim("{$this->teacher->first_name} {$this->teacher->last_name}")
-                : null,
+            'teacher_display_name' => $this->teacher->display_name,
             'teacher_image' => $this->teacher?->image,
             'added_by'      => $this->admin?->username,
             'added_by_image' => $this->admin?->image,

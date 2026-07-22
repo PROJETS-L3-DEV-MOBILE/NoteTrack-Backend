@@ -18,7 +18,7 @@ class TeacherResource extends JsonResource
             'id' => $this->id,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
-            'display_name' => $this->display_name ?? "{$this->first_name} {$this->last_name}",
+            'display_name' => $this->display_name,
             'email' => $this->user?->email,
             'image' => $this->image,
             'subjects_count' => (int) ($this->subjects_count ?? 0),
