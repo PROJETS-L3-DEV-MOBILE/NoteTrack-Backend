@@ -91,14 +91,9 @@ class SubjectService
 
     public function updateSubject(Subject $subject, array $data): Subject
     {
-        $subject->update([
-            'name'        => $data['name'],
-            'teacher_id'  => $data['teacher_id'],
-            'semester_id' => $data['semester_id'],
-            'coefficient' => $data['coefficient'],
-            'threshold'   => $data['threshold'],
-            'credits'     => $data['credits'],
-        ]);
+        if (!empty($data)) {
+            $subject->update($data);
+        }
 
         return $subject->fresh(['teacher', 'semester']);
     }
