@@ -43,7 +43,7 @@ class SubjectController extends Controller
     /**
      * PUT /admin/ues/{ue}/subjects/{subject}
      */
-    public function update(UpdateSubjectRequest $request, Subject $subject): JsonResponse
+    public function update(UpdateSubjectRequest $request, UE $ue, Subject $subject): JsonResponse
     {
         $subject = $this->subjects->updateSubject($subject, $request->validated());
 
