@@ -23,7 +23,7 @@ class Note extends Model
         'status' => NoteStatus::class,
         'type' => NoteType::class,
         'published_at' => 'datetime',
-        'value' => 'decimal:2',
+        'value' => 'float',
     ];
 
     public function student(): BelongsTo

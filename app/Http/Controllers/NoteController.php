@@ -111,7 +111,10 @@ class NoteController extends Controller
             $note->update($request->validated());
         });
 
-        return response()->json($note->load('histories'), 200);
+        return response()->json(
+            $note->load(['histories' => fn($query) => $query->orderBy('changed_at', 'desc')]),
+            200
+        );
     }
 
     /**

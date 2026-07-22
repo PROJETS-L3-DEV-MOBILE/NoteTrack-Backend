@@ -18,8 +18,8 @@ class NoteHistory extends Model
 
     protected $casts = [
         'changed_at' => 'datetime',
-        'old_value'  => 'decimal:2',
-        'new_value'  => 'decimal:2',
+        'old_value'  => 'float',
+        'new_value'  => 'float',
     ];
 
     public function note(): BelongsTo
