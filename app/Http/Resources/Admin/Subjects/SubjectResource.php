@@ -19,9 +19,7 @@ class SubjectResource extends JsonResource
             'threshold'   => $this->threshold,
             'teacher_id'  => $this->teacher_id,
             'teacher'     => [
-                'display_name' => $this->teacher
-                    ? trim("{$this->teacher->first_name} {$this->teacher->last_name}")
-                    : null,
+                'display_name' => $this->teacher->display_name,
             ],
             'semester_id' => $this->semester_id,
             'semester'    => [
