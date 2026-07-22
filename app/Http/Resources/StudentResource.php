@@ -25,6 +25,7 @@ class StudentResource extends JsonResource
             'average' => $this->average,
             'mention' => $this->mention,
             'enrolled_at' => $this->created_at->toISOString(),
+            'number' => $this->number
         ];
     }
 }
