@@ -25,14 +25,16 @@ class StudentController extends Controller
         $students = Student::with(['promotion', 'user', 'notes'])
             ->when($request->search, function ($q, $search) {
                 $q->where(function ($sub) use ($search) {
-                    $sub->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%")
-                        ->orWhere('matricule', 'like', "%{$search}%");
+                    $term = '%' . mb_strtolower($search, 'UTF-8') . '%';
+
+                    $sub->whereRaw('LOWER(first_name) LIKE ?', [$term])
+                        ->orWhereRaw('LOWER(last_name) LIKE ?', [$term])
+                        ->orWhereRaw('LOWER(matricule) LIKE ?', [$term]);
                 });
             })
             ->when($request->classe_id, fn($q, $classId) => $q->where('classe_id', $classId))
-            ->when($request->school_year, function ($q, $year) {
-                $q->whereHas('promotion', fn($sub) => $sub->where('prom_year', $year));
+            ->when($request->school_year, function ($q, $schoolYearId) {
+                $q->whereHas('promotion', fn($sub) => $sub->where('school_year_id', $schoolYearId));
             })
             ->paginate($request->query('limit', 15));
 

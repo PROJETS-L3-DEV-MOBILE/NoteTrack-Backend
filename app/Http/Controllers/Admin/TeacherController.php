@@ -28,6 +28,7 @@ class TeacherController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $search = $request->query('search', '');
         $sort = TeacherSortEnum::tryFrom($request->query('sort')) ?? TeacherSortEnum::CreationDate;
 
         $query = Teacher::query()
@@ -41,6 +42,17 @@ class TeacherController extends Controller
                         ->join('ues', 'subjects.ue_id', '=', 'ues.id');
                 }
             ]);
+
+        // case insensitive search
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $term = '%' . mb_strtolower($search, 'UTF-8') . '%';
+
+                $q->whereRaw('LOWER(first_name) LIKE ?', [$term])
+                    ->orWhereRaw('LOWER(last_name) LIKE ?', [$term])
+                    ->orWhereRaw('LOWER(display_name) LIKE ?', [$term]);
+            });
+        }
 
         match ($sort) {
             TeacherSortEnum::NameAZ => $query->orderBy('full_name', 'asc'),
