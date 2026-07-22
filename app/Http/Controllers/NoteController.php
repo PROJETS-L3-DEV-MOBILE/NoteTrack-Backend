@@ -16,7 +16,7 @@ class NoteController extends Controller
     use AuthorizesRequests;
 
     /**
-     * GET /notes/subjects/{subject_id}
+     * GET /notes/subject/{subject_id}
      * Liste complète des étudiants avec l'état de leurs notes imbriquées pour une matière.
      */
     public function indexBySubject(string $subjectId): JsonResponse
@@ -48,7 +48,7 @@ class NoteController extends Controller
     }
 
     /**
-     * POST /notes/subjects/{subject_id}
+     * POST /notes/subject/{subject_id}
      * Saisie standard d'une note ou d'une absence (value: -1).
      */
     public function store(NoteRequest $request, string $subjectId): JsonResponse
@@ -131,7 +131,7 @@ class NoteController extends Controller
     }
 
     /**
-     * PATCH /notes/subjects/{subject_id}/publish
+     * PATCH /notes/subject/{subject_id}/publish
      * Bulk — Publication en masse de toutes les notes PENDING de la matière.
      */
     public function bulkPublish(string $subjectId): JsonResponse
@@ -163,7 +163,7 @@ class NoteController extends Controller
     }
 
     /**
-     * PATCH /notes/subjects/{subject_id}/lock
+     * PATCH /notes/subject/{subject_id}/lock
      * Bulk — Verrouillage en masse de toutes les notes PUBLISHED de la matière.
      */
     public function bulkLock(string $subjectId): JsonResponse
