@@ -81,8 +81,10 @@ class NoteRequest extends FormRequest
                 $total = max(0, (float) $notes->get(NoteType::Test->value)->value)
                     + max(0, (float) $notes->get(NoteType::Exam->value)->value);
 
+                $average = $total / 2;
+
                 $subject = Subject::find($subjectId);
-                if ($total > $subject?->threshold) {
+                if ($average > $subject?->threshold) {
                     $validator->errors()->add('type', 'Student has already validated the subject.');
                 }
             }
