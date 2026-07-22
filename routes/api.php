@@ -36,6 +36,8 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
         return $user;
     });
 
+    Route::get('/school-years', [SchoolYearController::class, 'index']);
+
     // Teacher group
     Route::middleware('isTeacher')->prefix('teacher')->group(function () {
         Route::get('/dashboard/stats', [TeacherDashboardController::class, 'stats']);
