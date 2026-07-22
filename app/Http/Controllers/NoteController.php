@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\{Note, Student, NoteHistory};
+use App\Models\{Note, Student, NoteHistory, Subject};
 use App\Enums\{NoteType, NoteStatus};
 use App\Http\Requests\NoteRequest;
 use Illuminate\Http\{JsonResponse, Request};
@@ -25,12 +25,14 @@ class NoteController extends Controller
 
         $schoolYearId = $request->query('school_year_id');
 
+        $subject = Subject::findOrFail($subjectId);
+
         $students = Student::with(['notes' => function ($query) use ($subjectId, $schoolYearId) {
             $query->where('subject_id', $subjectId)
                 ->when($schoolYearId !== null, fn($q) => $q->where('school_year_id', $schoolYearId));
         }])->get();
 
-        return response()->json($students->map(fn($student) => [
+        $notes = $students->map(fn($student) => [
             'student' => [
                 'id'        => $student->id,
                 'matricule' => $student->matricule,
@@ -48,7 +50,12 @@ class NoteController extends Controller
                     'school_year' => $note->schoolYear
                 ]];
             })->toArray()
-        ]), 200);
+        ]);
+
+        return response()->json(
+            ["subject" => $subject, "data" => $notes],
+            200
+        );
     }
 
     /**
@@ -59,16 +66,16 @@ class NoteController extends Controller
     {
         $this->authorize('update', new Note(['subject_id' => $subjectId]));
 
-        $note = new Note();
-        $note->fill(array_merge($request->validated(), [
-            'id'         => Str::uuid(),
-            'subject_id' => $subjectId,
-            'status'     => NoteStatus::Pending,
-            'type'      => $request->type,
-            'created_by' => $request->user()->id,
-            'school_year_id' => $request->school_year_id
-        ]));
-        $note->save();
+        $validated = $request->validated();
+
+        $data = array_merge($validated, [
+            'id'             => (string) Str::uuid(),
+            'subject_id'     => $subjectId,
+            'status'         => NoteStatus::Pending,
+            'created_by'     => $request->user()->id,
+        ]);
+
+        $note = Note::create($data);
 
         return response()->json($note, 201);
     }
@@ -95,7 +102,9 @@ class NoteController extends Controller
             return response()->json(['message' => 'Can not modify a locked note.'], 423);
         }
 
-        DB::transaction(function () use ($note, $request) {
+        $validated = $request->validated();
+
+        DB::transaction(function () use ($note, $request, $validated) {
             $history = new NoteHistory();
             $history->fill([
                 'id'         => Str::uuid(),
@@ -108,7 +117,7 @@ class NoteController extends Controller
             ]);
             $history->save();
 
-            $note->update($request->validated());
+            $note->update($validated);
         });
 
         return response()->json(
@@ -196,7 +205,37 @@ class NoteController extends Controller
             return response()->json(['message' => 'Can not delete a locked note.'], 423);
         }
 
-        Note::destroy($note->id);
+        // 1. Cannot delete Test if exam of makeup exists
+        if ($note->type === NoteType::Test) {
+            $hasDependents = Note::where('student_id', $note->student_id)
+                ->where('subject_id', $note->subject_id)
+                ->whereIn('type', [NoteType::Exam, NoteType::Makeup])
+                ->exists();
+
+            if ($hasDependents) {
+                return response()->json([
+                    'message' => 'Cannot delete test because an exam or makeup already exists.'
+                ], 422);
+            }
+        }
+
+        // 2. Cannot delete Exam if Makeup exists
+        if ($note->type === NoteType::Exam) {
+            $hasMakeup = Note::where('student_id', $note->student_id)
+                ->where('subject_id', $note->subject_id)
+                ->where('type', NoteType::Makeup)
+                ->exists();
+
+            if ($hasMakeup) {
+                return response()->json([
+                    'message' => 'Cannot delete exam because a makeup already exists.'
+                ], 422);
+            }
+        }
+
+        // Suppression de la note
+        $note->delete();
+
         return response()->json(['message' => 'Note deleted successfully.'], 200);
     }
 }

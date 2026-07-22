@@ -7,6 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 use App\Models\Subject;
 use App\Models\Note;
+use Illuminate\Validation\Rule;
 
 class NoteRequest extends FormRequest
 {
@@ -19,19 +20,19 @@ class NoteRequest extends FormRequest
     {
         if ($this->isMethod('post')) {
             return [
-                'student_id' => 'required|uuid|exists:students,id',
+                'student_id' => ['required', 'uuid', Rule::exists('students', 'id')->whereNull('deleted_at')],
                 'type'       => ['required', new Enum(NoteType::class)],
                 'value'      => 'required|numeric|between:-1,20',
-                'status'     => ['nullable', new Enum(NoteStatus::class)],
                 'school_year_id' => ['required', 'int', 'exists:school_years,id']
             ];
         }
 
         return [
-            'value'  => 'required|numeric|between:-1,20',
-            'status' => ['nullable', new Enum(NoteStatus::class)],
-            'type'   => ['nullable', new Enum(NoteType::class)],
-            'school_year_id' => ['nullable', 'int', 'exists:school_years,id']
+            'student_id' => ['sometimes', 'uuid', Rule::exists('students', 'id')->whereNull('deleted_at')],
+            'value'  => 'sometimes|numeric|between:-1,20',
+            'status' => ['sometimes', new Enum(NoteStatus::class)],
+            'type'   => ['sometimes', new Enum(NoteType::class)],
+            'school_year_id' => ['sometimes', 'int', 'exists:school_years,id']
         ];
     }
 
