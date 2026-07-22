@@ -22,7 +22,7 @@ class SubjectService
         return Classe::query()
             ->whereHas('ues')
             ->withCount(['ues', 'subjects'])
-            ->with(['ues' => fn ($q) => $q->with(['subjects' => fn ($q) => $q->with(['teacher', 'semester'])])])
+            ->with(['ues' => fn($q) => $q->with(['subjects' => fn($q) => $q->with(['teacher', 'semester'])])])
             ->latest('created_at')
             ->get();
     }
@@ -44,11 +44,19 @@ class SubjectService
 
     public function updateUE(UE $ue, array $data): UE
     {
-        $ue->update([
-            'label'    => $data['name'],
-            'color'    => $data['color'],
-            'classe_id' => $data['classe_id'],
-        ]);
+        $payload = [];
+
+        if (array_key_exists('label', $data)) {
+            $payload['label'] = $data['label'];
+        }
+
+        if (array_key_exists('color', $data)) {
+            $payload['color'] = $data['color'];
+        }
+
+        if (!empty($payload)) {
+            $ue->update($payload);
+        }
 
         return $ue->fresh();
     }

@@ -14,9 +14,8 @@ class UpdateUERequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'     => ['required', 'string', 'min:1', 'max:255'],
-            'classe_id' => ['required', 'string', 'exists:classes,id'],
-            'color'    => ['required', 'string', 'min:1', 'max:255'],
+            'label'     => ['nullable', 'string', 'min:1', 'max:255'],
+            'color'    => ['nullable', 'string', 'min:1', 'max:255'],
         ];
     }
 }

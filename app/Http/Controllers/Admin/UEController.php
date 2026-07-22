@@ -39,6 +39,11 @@ class UEController extends Controller
         return response()->json(new UEResource($ue), 201);
     }
 
+    public function show(UE $ue): JsonResponse
+    {
+        return response()->json(new UEResource($ue));
+    }
+
     /**
      * PUT /admin/ues/{ue}
      */
