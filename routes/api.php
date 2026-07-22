@@ -76,6 +76,9 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
         // Teachers
         Route::apiResource('/teachers', TeacherController::class);
 
+        // teachers not paginated
+        Route::get('/all-teachers', [TeacherController::class, 'indexRaw']);
+
         // Students
         Route::apiResource('/students', StudentController::class);
 

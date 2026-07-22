@@ -68,6 +68,16 @@ class TeacherController extends Controller
         return response()->json($teachers, 200);
     }
 
+    public function indexRaw(): JsonResponse
+    {
+        $teachers = Teacher::all();
+
+        return response()->json(
+            TeacherResource::collection($teachers),
+            200
+        );
+    }
+
     /**
      * Store a newly created resource in storage.
      */
