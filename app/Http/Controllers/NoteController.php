@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\{Note, Student, NoteHistory};
 use App\Enums\{NoteType, NoteStatus};
 use App\Http\Requests\NoteRequest;
-use Illuminate\Http\{JsonResponse};
+use Illuminate\Http\{JsonResponse, Request};
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -19,12 +19,16 @@ class NoteController extends Controller
      * GET /notes/subject/{subject_id}
      * Liste complète des étudiants avec l'état de leurs notes imbriquées pour une matière.
      */
-    public function indexBySubject(string $subjectId): JsonResponse
+    public function indexBySubject(Request $request, string $subjectId): JsonResponse
     {
-
         $this->authorize('viewBySubject', [Note::class, $subjectId]);
 
-        $students = Student::with(['notes' => fn($q) => $q->where('subject_id', $subjectId)])->get();
+        $schoolYearId = $request->query('school_year_id');
+
+        $students = Student::with(['notes' => function ($query) use ($subjectId, $schoolYearId) {
+            $query->where('subject_id', $subjectId)
+                ->when($schoolYearId !== null, fn($q) => $q->where('school_year_id', $schoolYearId));
+        }])->get();
 
         return response()->json($students->map(fn($student) => [
             'student' => [
@@ -38,9 +42,9 @@ class NoteController extends Controller
                 if ($note === null) return [];
 
                 return [strtolower($type->value) => [
-                    'id'     => $note->id,
-                    'value'  => (float) $note->value,
-                    'status' => $note->status->value,
+                    'id'          => $note->id,
+                    'value'       => (float) $note->value,
+                    'status'      => $note->status->value,
                     'school_year' => $note->schoolYear
                 ]];
             })->toArray()

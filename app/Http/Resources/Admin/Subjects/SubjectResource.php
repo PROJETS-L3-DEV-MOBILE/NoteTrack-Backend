@@ -16,7 +16,7 @@ class SubjectResource extends JsonResource
             'name'        => $this->name,
             'credits'     => $this->credits,
             'coefficient' => $this->coefficient,
-            'threshold'   => $this->threshold,
+            'threshold'   => (float) $this->threshold,
             'teacher_id'  => $this->teacher_id,
             'teacher'     => [
                 'display_name' => $this->teacher->display_name,
