@@ -3,14 +3,10 @@
 namespace App\Notifications;
 
 use App\Enums\NotificationType;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
-/**
- * "Database" notification
- */
-class SystemNotification extends Notification implements ShouldQueue
+class SystemNotification extends Notification // implements ShouldQueue
 {
     use Queueable;
 

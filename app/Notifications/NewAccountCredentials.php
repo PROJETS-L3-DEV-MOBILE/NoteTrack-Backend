@@ -2,12 +2,12 @@
 
 namespace App\Notifications;
 
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Bus\Queueable;
+// use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class NewAccountCredentialsNotification extends Notification implements ShouldQueue
+class NewAccountCredentialsNotification extends Notification // implements ShouldQueue
 {
     use Queueable;
 
