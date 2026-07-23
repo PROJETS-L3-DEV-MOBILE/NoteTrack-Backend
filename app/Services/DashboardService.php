@@ -129,7 +129,7 @@ class DashboardService
      */
     public function recentActivities(User $user, int $limit = 10): Collection
     {
-        return $user->unreadNotifications()
+        return $user->notifications()
             ->latest()
             ->limit($limit)
             ->get();
