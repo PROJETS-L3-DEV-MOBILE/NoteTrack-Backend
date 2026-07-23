@@ -15,20 +15,35 @@ class NoteRequest extends FormRequest
         return true;
     }
 
+    /**
+     * -1 OR between 0 and 20
+     */
+    private function noteValueRules(bool $required = true): array
+    {
+        return [
+            $required ? 'required' : 'sometimes',
+            'numeric',
+            Rule::or([
+                Rule::in([-1]),
+                'between:0,20',
+            ]),
+        ];
+    }
+
     public function rules(): array
     {
         if ($this->isMethod('post')) {
             return [
                 'student_id' => ['required', 'uuid', Rule::exists('students', 'id')->whereNull('deleted_at')],
                 'type'       => ['required', new Enum(NoteType::class)],
-                'value'      => 'required|numeric|between:-1,20',
+                'value'      => $this->noteValueRules(required: true),
             ];
         }
 
         return [
-            'value'          => 'sometimes|numeric|between:-1,20',
-            'status'         => ['sometimes', new Enum(NoteStatus::class)],
-            'type'           => ['sometimes', new Enum(NoteType::class)],
+            'value'  => $this->noteValueRules(required: false),
+            'status' => ['sometimes', new Enum(NoteStatus::class)],
+            'type'   => ['sometimes', new Enum(NoteType::class)],
         ];
     }
 
