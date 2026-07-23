@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\{Note, Student, NoteHistory, Subject};
+use App\Models\{Note, Student, NoteHistory, SchoolYear, Subject};
 use App\Enums\{NoteType, NoteStatus};
 use App\Http\Requests\NoteRequest;
 use Illuminate\Http\{JsonResponse, Request};
@@ -21,11 +21,11 @@ class NoteController extends Controller
      */
     public function indexBySubject(Request $request, string $subjectId): JsonResponse
     {
-        $this->authorize('viewBySubject', [Note::class, $subjectId]);
+        $subject = Subject::findOrFail($subjectId);
+
+        $this->authorize('viewBySubject', [Note::class, $subject]);
 
         $schoolYearId = $request->query('school_year_id');
-
-        $subject = Subject::findOrFail($subjectId);
 
         $students = Student::with(['notes' => function ($query) use ($subjectId, $schoolYearId) {
             $query->where('subject_id', $subjectId)
@@ -64,12 +64,16 @@ class NoteController extends Controller
      */
     public function store(NoteRequest $request, string $subjectId): JsonResponse
     {
-        $this->authorize('update', new Note(['subject_id' => $subjectId]));
+        $subject = Subject::findOrFail($subjectId);
+
+        $this->authorize('create', [Note::class, $subject]);
 
         $validated = $request->validated();
+        $schoolYearId = SchoolYear::latest('id')->firstOrFail()->id;
 
         $data = array_merge($validated, [
             'id'             => (string) Str::uuid(),
+            'school_year_id' => $schoolYearId,
             'subject_id'     => $subjectId,
             'status'         => NoteStatus::Pending,
             'created_by'     => $request->user()->id,
@@ -92,33 +96,36 @@ class NoteController extends Controller
 
     /**
      * PUT/PATCH /notes/{note_id}
-     * Modification manuelle avec historisation.
+     * Modification manuelle avec historisation conditionnelle.
      */
     public function update(NoteRequest $request, Note $note): JsonResponse
     {
         $this->authorize('update', $note);
 
         if ($note->status === NoteStatus::Locked) {
-            return response()->json(['message' => 'Can not modify a locked note.'], 423);
+            return response()->json(['message' => 'Cannot modify a locked note.'], 423);
         }
 
         $validated = $request->validated();
+        $note->fill($validated);
 
-        DB::transaction(function () use ($note, $request, $validated) {
-            $history = new NoteHistory();
-            $history->fill([
-                'id'         => Str::uuid(),
-                'note_id'    => $note->id,
-                'old_value'  => $note->value,
-                'new_value'  => $request->value,
-                'changed_by' => $request->user()->id,
-                'school_year_id' => $request->school_year_id,
-                'changed_at' => now()
-            ]);
-            $history->save();
+        if ($note->isDirty()) {
+            DB::transaction(function () use ($note, $request) {
+                if ($note->isDirty('value')) {
+                    NoteHistory::create([
+                        'id'             => (string) Str::uuid(),
+                        'note_id'        => $note->id,
+                        'old_value'      => $note->getOriginal('value'),
+                        'new_value'      => $note->value,
+                        'changed_by'     => $request->user()->id,
+                        'school_year_id' => $note->school_year_id,
+                        'changed_at'     => now(),
+                    ]);
+                }
 
-            $note->update($validated);
-        });
+                $note->save();
+            });
+        }
 
         return response()->json(
             $note->load(['histories' => fn($query) => $query->orderBy('changed_at', 'desc')]),
@@ -152,11 +159,16 @@ class NoteController extends Controller
      */
     public function bulkPublish(string $subjectId): JsonResponse
     {
-        $this->authorize('update', new Note(['subject_id' => $subjectId]));
+        $subject = Subject::findOrFail($subjectId);
+
+        $this->authorize('manageNotes', [Note::class, $subject]);
 
         Note::where('subject_id', $subjectId)
             ->where('status', NoteStatus::Pending)
-            ->update(['status' => NoteStatus::Published, 'published_at' => now()]);
+            ->update([
+                'status'       => NoteStatus::Published,
+                'published_at' => now()
+            ]);
 
         return response()->json(['message' => 'All pending notes have been published.'], 200);
     }
@@ -184,8 +196,9 @@ class NoteController extends Controller
      */
     public function bulkLock(string $subjectId): JsonResponse
     {
+        $subject = Subject::findOrFail($subjectId);
 
-        $this->authorize('update', new Note(['subject_id' => $subjectId]));
+        $this->authorize('manageNotes', [Note::class, $subject]);
 
         Note::where('subject_id', $subjectId)
             ->where('status', NoteStatus::Published)
@@ -199,13 +212,19 @@ class NoteController extends Controller
      */
     public function destroy(Note $note): JsonResponse
     {
+        // 1. Authorization : Teacher -> class
         $this->authorize('delete', $note);
 
-        if ($note->status === NoteStatus::Locked) {
-            return response()->json(['message' => 'Can not delete a locked note.'], 423);
+        // 2. Published / locked
+        if ($note->status === NoteStatus::Published) {
+            return response()->json(['message' => 'Cannot delete a published note.'], 422);
         }
 
-        // 1. Cannot delete Test if exam of makeup exists
+        if ($note->status === NoteStatus::Locked) {
+            return response()->json(['message' => 'Cannot delete a locked note.'], 423);
+        }
+
+        // 3. Test : Exam / Makeup already exists
         if ($note->type === NoteType::Test) {
             $hasDependents = Note::where('student_id', $note->student_id)
                 ->where('subject_id', $note->subject_id)
@@ -219,7 +238,7 @@ class NoteController extends Controller
             }
         }
 
-        // 2. Cannot delete Exam if Makeup exists
+        // 4. Exam -> Makeup already exists
         if ($note->type === NoteType::Exam) {
             $hasMakeup = Note::where('student_id', $note->student_id)
                 ->where('subject_id', $note->subject_id)
@@ -233,9 +252,8 @@ class NoteController extends Controller
             }
         }
 
-        // Suppression de la note
         $note->delete();
-
+        
         return response()->json(['message' => 'Note deleted successfully.'], 200);
     }
 }

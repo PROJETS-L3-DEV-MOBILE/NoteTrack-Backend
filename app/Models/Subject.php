@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 #[Fillable(['name', 'is_available', 'threshold', 'credits', 'coefficient', 'ue_id', 'teacher_id', 'semester_id', 'admin_id'])]
 class Subject extends Model
@@ -15,6 +16,10 @@ class Subject extends Model
 
     protected $keyType = 'string';
     public $incrementing = false;
+
+    protected $casts = [
+        "threshold" => "float"
+    ];
 
     public function ue(): BelongsTo
     {
@@ -42,5 +47,10 @@ class Subject extends Model
     public function notes(): HasMany
     {
         return $this->hasMany(Note::class);
+    }
+
+    public function classe(): HasOneThrough
+    {
+        return $this->hasOneThrough(Classe::class, UE::class);
     }
 }

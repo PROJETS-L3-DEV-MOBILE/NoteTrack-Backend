@@ -23,16 +23,13 @@ class NoteRequest extends FormRequest
                 'student_id' => ['required', 'uuid', Rule::exists('students', 'id')->whereNull('deleted_at')],
                 'type'       => ['required', new Enum(NoteType::class)],
                 'value'      => 'required|numeric|between:-1,20',
-                'school_year_id' => ['required', 'int', 'exists:school_years,id']
             ];
         }
 
         return [
-            'student_id' => ['sometimes', 'uuid', Rule::exists('students', 'id')->whereNull('deleted_at')],
             'value'  => 'sometimes|numeric|between:-1,20',
             'status' => ['sometimes', new Enum(NoteStatus::class)],
             'type'   => ['sometimes', new Enum(NoteType::class)],
-            'school_year_id' => ['sometimes', 'int', 'exists:school_years,id']
         ];
     }
 

@@ -8,6 +8,7 @@ use App\Models\User;
 
 class NotePolicy
 {
+
     public function before(User $user): ?bool
     {
         if ($user->role === 'admin') {
@@ -16,23 +17,36 @@ class NotePolicy
         return null;
     }
 
-    public function viewBySubject(User $user, string $subjectId): bool
+    public function viewBySubject(User $user, Subject $subject): bool
     {
-        $subject = Subject::find($subjectId);
-        return $subject && $subject->teacher_id === $user->id;
+        return $subject->teacher_id === $user->id;
     }
 
     public function view(User $user, Note $note): bool
     {
-        $isTeacherOwner = $note->subject && $note->subject->teacher_id === $user->id;
+        $isTeacherOwner = $note->subject?->teacher_id === $user->id;
         $isStudentOwner = $user->student_id === $note->student_id;
 
         return $isTeacherOwner || $isStudentOwner;
     }
 
+    public function create(User $user, Subject $subject): bool
+    {
+        return $subject->teacher_id === $user->id;
+    }
+
+    public function manageNotes(User $user, Subject $subject): bool
+    {
+        return $subject->teacher_id === $user->id;
+    }
+
     public function update(User $user, Note $note): bool
     {
-        return $note->subject && $note->subject->teacher_id === $user->id;
+        if ($note->subject?->teacher_id !== $user->id) {
+            return false;
+        }
+
+        return $note->student?->classe_id === $note->subject->classe?->id;
     }
 
     public function delete(User $user, Note $note): bool
