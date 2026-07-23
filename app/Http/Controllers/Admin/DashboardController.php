@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Dashboard\ResultsFilterRequest;
 use App\Http\Requests\Admin\Dashboard\StatsFilterRequest;
 use App\Http\Resources\Admin\Dashboard\LatestNoteResource;
-use App\Http\Resources\Admin\Dashboard\NotificationResource;
 use App\Http\Resources\Admin\Dashboard\RecentSubjectResource;
 use App\Services\DashboardService;
 use Illuminate\Http\JsonResponse;
@@ -40,11 +39,13 @@ class DashboardController extends Controller
 
     public function recentActivities(Request $request): JsonResponse
     {
+        $user = $request->user();
         $notifications = $this->dashboard->recentActivities(
+            $user,
             (int) $request->integer('limit', 8)
         );
 
-        return response()->json(NotificationResource::collection($notifications));
+        return response()->json($notifications);
     }
 
     public function latestNotes(Request $request): JsonResponse

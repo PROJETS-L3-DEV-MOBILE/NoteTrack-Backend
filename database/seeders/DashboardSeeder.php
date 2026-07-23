@@ -15,7 +15,7 @@ use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\UE;
 use App\Models\User;
-use App\Notifications\DashboardActivityNotification;
+use App\Notifications\SystemNotification;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -294,7 +294,7 @@ class DashboardSeeder extends Seeder
         ];
 
         foreach ($activities as $activity) {
-            $admin->notify(new DashboardActivityNotification(
+            $admin->notify(new SystemNotification(
                 $activity['title'],
                 $activity['description'],
                 $activity['type'],

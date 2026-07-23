@@ -3,15 +3,14 @@
 namespace App\Notifications;
 
 use App\Enums\NotificationType;
-use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Notifications\Notification;
 
 /**
- * Notification "base de données" alimentant /admin/dashboard/recent-activities.
- * Remplace l'ancien modèle Eloquent App\Models\Notification par le système
- * de notifications natif de Laravel (table notifications standard).
+ * "Database" notification
  */
-class DashboardActivityNotification extends Notification
+class SystemNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -23,10 +22,19 @@ class DashboardActivityNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     public function toDatabase(object $notifiable): array
+    {
+        return [
+            'title'       => $this->title,
+            'description' => $this->description,
+            'type'        => $this->type->value,
+        ];
+    }
+
+    public function toBroadcast(object $notifiable): array
     {
         return [
             'title'       => $this->title,

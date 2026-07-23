@@ -5,8 +5,7 @@ namespace App\Http\Requests;
 use App\Enums\{NoteType, NoteStatus};
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
-use App\Models\Subject;
-use App\Models\Note;
+use App\Models\{Subject, Note};
 use Illuminate\Validation\Rule;
 
 class NoteRequest extends FormRequest
@@ -27,16 +26,15 @@ class NoteRequest extends FormRequest
         }
 
         return [
-            'value'  => 'sometimes|numeric|between:-1,20',
-            'status' => ['sometimes', new Enum(NoteStatus::class)],
-            'type'   => ['sometimes', new Enum(NoteType::class)],
+            'value'          => 'sometimes|numeric|between:-1,20',
+            'status'         => ['sometimes', new Enum(NoteStatus::class)],
+            'type'           => ['sometimes', new Enum(NoteType::class)],
         ];
     }
 
-    public function withValidator($validator)
+    public function withValidator(mixed $validator)
     {
         $validator->after(function ($validator) {
-            // if any basic validation failed
             if ($validator->errors()->any()) return;
 
             $note = $this->route('note');
@@ -44,13 +42,11 @@ class NoteRequest extends FormRequest
 
             $targetType = $typeInput ? NoteType::from($typeInput) : ($note ? $note->type : null);
 
-            // update without changing type
             if (!$targetType) return;
 
             $subjectId = $note ? $note->subject_id : ($this->route('subject_id') ?? $this->input('subject_id'));
             $studentId = $note ? $note->student_id : $this->input('student_id');
 
-            // get all notes
             $query = Note::where('student_id', $studentId)->where('subject_id', $subjectId);
             if ($note) {
                 $query->where('id', '!=', $note->id);
@@ -58,31 +54,31 @@ class NoteRequest extends FormRequest
 
             $notes = $query->get()->keyBy(fn($n) => $n->type->value);
 
-            // verify duplicate
+            // 1. Verify duplicate
             if ($notes->has($targetType->value)) {
                 $validator->errors()->add('type', 'A note or absence already exists for this subject and type.');
                 return;
             }
 
-            // exam needs test first
+            // 2. Exam needs test
             if ($targetType === NoteType::Exam && !$notes->has(NoteType::Test->value)) {
-                $validator->errors()->add('type', 'Student need test before exam.');
+                $validator->errors()->add('type', 'Student needs a test before taking an exam.');
             }
 
-            // makeup needs test and exam failed first
+            // 3. Makeup needs test & exam
             if ($targetType === NoteType::Makeup) {
                 if (!$notes->has(NoteType::Test->value) || !$notes->has(NoteType::Exam->value)) {
-                    $validator->errors()->add('type', 'Makeup need test and exam first.');
+                    $validator->errors()->add('type', 'Makeup requires both a test and an exam first.');
                     return;
                 }
 
-                $total = max(0, (float) $notes->get(NoteType::Test->value)->value)
-                    + max(0, (float) $notes->get(NoteType::Exam->value)->value);
+                $testVal = max(0, (float) $notes->get(NoteType::Test->value)->value);
+                $examVal = max(0, (float) $notes->get(NoteType::Exam->value)->value);
 
-                $average = $total / 2;
+                $average = ($testVal + $examVal) / 2;
 
                 $subject = Subject::find($subjectId);
-                if ($average > $subject?->threshold) {
+                if ($subject && $average >= $subject->threshold) {
                     $validator->errors()->add('type', 'Student has already validated the subject.');
                 }
             }

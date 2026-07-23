@@ -9,6 +9,7 @@ use App\Http\Resources\Admin\Subjects\LevelResource;
 use App\Http\Resources\Admin\Subjects\SubjectResource;
 use App\Models\Subject;
 use App\Models\UE;
+use App\Services\NotificationService;
 use App\Services\SubjectService;
 use Illuminate\Http\JsonResponse;
 
@@ -16,6 +17,7 @@ class SubjectController extends Controller
 {
     public function __construct(
         protected SubjectService $subjects,
+        protected NotificationService $notificationService
     ) {}
 
     /**
@@ -33,13 +35,12 @@ class SubjectController extends Controller
      */
     public function store(CreateSubjectRequest $request, UE $ue): JsonResponse
     {
-        $admin = $request->user()->admin;
+        $subject = $this->subjects->createSubject($ue, $request->validated(), $request->user()->admin);
 
-        $subject = $this->subjects->createSubject($ue, $request->validated(), $admin);
+        $this->notificationService->notifySubjectCreated($request->user(), $subject);
 
         return response()->json(new SubjectResource($subject), 201);
     }
-
     /**
      * PUT /admin/ues/{ue}/subjects/{subject}
      */

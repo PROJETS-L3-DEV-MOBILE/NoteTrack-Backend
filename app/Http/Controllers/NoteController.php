@@ -6,7 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\{Note, Student, NoteHistory, SchoolYear, Subject};
 use App\Enums\{NoteType, NoteStatus};
 use App\Http\Requests\NoteRequest;
-use Illuminate\Http\{JsonResponse, Request};
+use App\Services\NotificationService;
+use Illuminate\Http\{JsonResponse, Request, Request as HttpRequest};
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -14,6 +15,8 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class NoteController extends Controller
 {
     use AuthorizesRequests;
+
+    public function __construct(protected NotificationService $notificationService) {}
 
     /**
      * GET /notes/subject/{subject_id}
@@ -157,18 +160,31 @@ class NoteController extends Controller
      * PATCH /notes/subject/{subject_id}/publish
      * Bulk — Publication en masse de toutes les notes PENDING de la matière.
      */
-    public function bulkPublish(string $subjectId): JsonResponse
+    public function bulkPublish(Request $request, string $subjectId,): JsonResponse
     {
         $subject = Subject::findOrFail($subjectId);
 
         $this->authorize('manageNotes', [Note::class, $subject]);
 
-        Note::where('subject_id', $subjectId)
+        $targetStudents = $subject->getUsersWithPendingNotes();
+
+        if ($targetStudents->isEmpty()) {
+            return response()->json(['message' => 'No pending notes found to publish.'], 200);
+        }
+
+        $publishedCount = Note::where('subject_id', $subject->id)
             ->where('status', NoteStatus::Pending)
             ->update([
-                'status'       => NoteStatus::Published,
-                'published_at' => now()
+                'status' => NoteStatus::Published,
+                'published_at' => now(),
             ]);
+
+        $this->notificationService->notifyNotesPublished(
+            actor: $request->user(),
+            subject: $subject,
+            count: $publishedCount,
+            targetStudents: $targetStudents
+        );
 
         return response()->json(['message' => 'All pending notes have been published.'], 200);
     }
@@ -194,15 +210,28 @@ class NoteController extends Controller
      * PATCH /notes/subject/{subject_id}/lock
      * Bulk — Verrouillage en masse de toutes les notes PUBLISHED de la matière.
      */
-    public function bulkLock(string $subjectId): JsonResponse
+    public function bulkLock(Request $request, string $subjectId,): JsonResponse
     {
         $subject = Subject::findOrFail($subjectId);
 
         $this->authorize('manageNotes', [Note::class, $subject]);
 
-        Note::where('subject_id', $subjectId)
+        $targetStudents = $subject->getUsersWithPublishedNotes();
+
+        $lockedCount = Note::where('subject_id', $subjectId)
             ->where('status', NoteStatus::Published)
             ->update(['status' => NoteStatus::Locked]);
+
+        if ($lockedCount === 0) {
+            return response()->json(['message' => 'No published notes found to lock.'], 200);
+        }
+
+        $this->notificationService->notifyNotesLocked(
+            actor: $request->user(),
+            subject: $subject,
+            count: $lockedCount,
+            targetStudents: $targetStudents
+        );
 
         return response()->json(['message' => 'All published notes have been locked.'], 200);
     }
@@ -253,7 +282,7 @@ class NoteController extends Controller
         }
 
         $note->delete();
-        
+
         return response()->json(['message' => 'Note deleted successfully.'], 200);
     }
 }

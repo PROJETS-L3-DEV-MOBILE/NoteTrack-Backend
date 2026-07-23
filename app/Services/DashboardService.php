@@ -8,6 +8,7 @@ use App\Models\Note;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Teacher;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Carbon;
@@ -39,7 +40,7 @@ class DashboardService
             // disponible qui lui est affectée. Critère non défini explicitement
             // dans le cahier des charges : à valider avec l'équipe produit.
             'active_teachers' => Teacher::query()
-                ->whereHas('subjects', fn (Builder $q) => $q->where('is_available', true))
+                ->whereHas('subjects', fn(Builder $q) => $q->where('is_available', true))
                 ->count(),
 
             // Fix (suppression ExamSession) : "publiée" se lit maintenant sur
@@ -117,7 +118,7 @@ class DashboardService
     /**
      * Activités récentes non lues (RecentActivitiesSection), basées sur le
      * système de notifications natif de Laravel
-     * (App\Notifications\DashboardActivityNotification, envoyées à des Admin
+     * (App\Notifications\SystemNotification, envoyées à des Admin
      * via ->notify()).
      *
      * Le flux n'est pas propre à un admin précis (vue globale du dashboard),
@@ -126,12 +127,10 @@ class DashboardService
      *
      * Seules les notifications non lues (read_at null) sont retournées.
      */
-    public function recentActivities(int $limit = 10): Collection
+    public function recentActivities(User $user, int $limit = 10): Collection
     {
-        return DatabaseNotification::query()
-            ->where('notifiable_type', Admin::class)
-            ->whereNull('read_at')
-            ->latest('created_at')
+        return $user->unreadNotifications()
+            ->latest()
             ->limit($limit)
             ->get();
     }
@@ -166,21 +165,21 @@ class DashboardService
     private function studentsQuery(?string $level, ?string $classId, ?int $schoolYearId): Builder
     {
         return Student::query()
-            ->when($classId, fn (Builder $q) => $q->where('classe_id', $classId))
-            ->when($level, fn (Builder $q) => $q->whereHas(
+            ->when($classId, fn(Builder $q) => $q->where('classe_id', $classId))
+            ->when($level, fn(Builder $q) => $q->whereHas(
                 'classe',
-                fn (Builder $q) => $q->where('label', $level),
+                fn(Builder $q) => $q->where('label', $level),
             ))
-            ->when($schoolYearId, fn (Builder $q) => $q->whereHas(
+            ->when($schoolYearId, fn(Builder $q) => $q->whereHas(
                 'promotion',
-                fn (Builder $q) => $q->where('school_year_id', $schoolYearId),
+                fn(Builder $q) => $q->where('school_year_id', $schoolYearId),
             ));
     }
 
     private function applyDateRange(Builder $query, string $column, ?string $from, ?string $to): Builder
     {
         return $query
-            ->when($from, fn (Builder $q) => $q->where($column, '>=', Carbon::parse($from)->startOfDay()))
-            ->when($to, fn (Builder $q) => $q->where($column, '<=', Carbon::parse($to)->endOfDay()));
+            ->when($from, fn(Builder $q) => $q->where($column, '>=', Carbon::parse($from)->startOfDay()))
+            ->when($to, fn(Builder $q) => $q->where($column, '<=', Carbon::parse($to)->endOfDay()));
     }
 }

@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
-use App\Notifications\NewAccountCredentials;
+use App\Notifications\NewAccountCredentialsNotification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -19,7 +19,7 @@ class AccountCreationService
             'role'     => $role,
         ]);
 
-        $user->notify(new NewAccountCredentials($email, $plainPassword));
+        $user->notify(new NewAccountCredentialsNotification($email, $plainPassword));
 
         return $user;
     }

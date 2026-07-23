@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Http\Requests\Admin\StoreStudentRequest;
 use App\Http\Requests\Admin\UpdateStudentRequest;
 use App\Http\Resources\StudentResource;
 use App\Models\Classe;
+use App\Models\User;
 use App\Services\AccountCreationService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +21,7 @@ class StudentController extends Controller
 
     public function __construct(
         protected AccountCreationService $accountCreation,
+        protected NotificationService $notificationService
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -56,10 +60,11 @@ class StudentController extends Controller
 
     public function store(StoreStudentRequest $request)
     {
-        $data  = $request->validated();
-        $admin = $request->user()->admin;
+        $data = $request->validated();
+        $currentUser = $request->user();
+        $adminModel = $currentUser->admin;
 
-        $student = DB::transaction(function () use ($data, $admin) {
+        $student = DB::transaction(function () use ($data, $adminModel) {
             Classe::where('id', $data['classe_id'])->lockForUpdate()->first();
             $nextNumber = Student::where('classe_id', $data['classe_id'])->count() + 1;
 
@@ -70,11 +75,13 @@ class StudentController extends Controller
 
             return Student::create([
                 ...$data,
-                'user_id'   => $user->id,
-                'admin_id'  => $admin->id,
-                'number'    => $nextNumber,
+                'user_id'  => $user->id,
+                'admin_id' => $adminModel->id,
+                'number'   => $nextNumber,
             ]);
         });
+
+        $this->notificationService->notifyStudentCreated($request->user(), $student);
 
         return response()->json($student, 201);
     }

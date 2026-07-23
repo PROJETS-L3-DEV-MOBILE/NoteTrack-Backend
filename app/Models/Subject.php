@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\NoteStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -52,5 +54,21 @@ class Subject extends Model
     public function classe(): HasOneThrough
     {
         return $this->hasOneThrough(Classe::class, UE::class);
+    }
+
+    public function getUsersWithPendingNotes(): Collection
+    {
+        return User::whereHas('student.notes', function ($query) {
+            $query->where('subject_id', $this->id)
+                ->where('status', NoteStatus::Pending);
+        })->get();
+    }
+
+    public function getUsersWithPublishedNotes(): Collection
+    {
+        return User::whereHas('student.notes', function ($query) {
+            $query->where('subject_id', $this->id)
+                ->where('status', NoteStatus::Published);
+        })->get();
     }
 }
