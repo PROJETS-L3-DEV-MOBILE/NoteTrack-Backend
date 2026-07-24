@@ -23,10 +23,14 @@ class NoteRequest extends FormRequest
         return [
             $required ? 'required' : 'sometimes',
             'numeric',
-            Rule::or([
-                Rule::in([-1]),
-                'between:0,20',
-            ]),
+            function (string $attribute, mixed $value, \Closure $fail) {
+                $numericValue = (float) $value;
+                $isValid = $numericValue == -1 || ($numericValue >= 0 && $numericValue <= 20);
+
+                if (! $isValid) {
+                    $fail("{$attribute} must be -1 or between 0 and 20.");
+                }
+            },
         ];
     }
 
