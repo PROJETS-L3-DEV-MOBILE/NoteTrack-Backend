@@ -13,20 +13,6 @@ use App\Models\Subject;
 use App\Models\UE;
 use Illuminate\Support\Collection;
 
-/**
- * Feature Étudiant — Home (GET /student/home/stats, /student/home/statistics,
- * /student/results).
- *
- * Hypothèses de scoping communes aux 3 endpoints :
- * - Un étudiant n'a qu'une seule classe active (Student::classe_id) : il n'y
- *   a pas d'historique de classes dans le schéma actuel. Le filtre optionnel
- *   `class_id` ne peut donc que confirmer la classe réelle de l'étudiant ;
- *   s'il diverge, on renvoie un résultat vide plutôt que de basculer sur une
- *   autre classe (évite une fuite de données).
- * - `school_year` est une chaîne (label de SchoolYear, ex. "2025-2026") :
- *   on la résout en son id pour filtrer Note::school_year_id.
- * - `semester_id` restreint les matières considérées (Subject::semester_id).
- */
 class StudentHomeService
 {
     public function __construct(
@@ -44,8 +30,6 @@ class StudentHomeService
 
         $notesQuery = Note::where('student_id', $student->id)
             ->whereIn('subject_id', $subjectIds)
-            // where('school_year_id', null) => whereNull(...) => 0 ligne si
-            // l'année demandée est introuvable (cf. schoolYearScope()).
             ->when($yearRequested, fn ($q) => $q->where('school_year_id', $schoolYearId));
 
         return [
@@ -176,9 +160,7 @@ class StudentHomeService
     }
 
     /**
-     * Résout le filtre `school_year` (label -> id).
-     *
-     * Fix : distingue "pas de filtre demandé" de "filtre demandé mais année
+     * Distingue "pas de filtre demandé" de "filtre demandé mais année
      * introuvable" — un `school_year` inconnu doit renvoyer un résultat vide,
      * pas être silencieusement ignoré (cf. `when($falsy, ...)` qui aurait
      * sauté le filtre si on retournait simplement `null` dans les deux cas).
@@ -208,9 +190,7 @@ class StudentHomeService
     }
 
     /**
-     * Classement de l'étudiant dans sa classe ("8e / 14").
-     *
-     * Hypothèses (non explicitées dans le cahier des charges) :
+     * Classement de l'étudiant dans sa classe.
      * - Le classement porte sur tous les étudiants de la classe (pas
      *   seulement ceux ayant déjà une moyenne calculable).
      * - Classement "standard" : deux moyennes égales partagent le même rang.
