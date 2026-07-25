@@ -40,11 +40,13 @@ class StudentHomeService
     {
         $subjectIds = $this->subjectsQuery($student, $filters)->pluck('id');
 
-        $schoolYearId = $this->resolveSchoolYearId($filters['school_year'] ?? null);
+        [$yearRequested, $schoolYearId] = $this->schoolYearScope($filters);
 
         $notesQuery = Note::where('student_id', $student->id)
             ->whereIn('subject_id', $subjectIds)
-            ->when($schoolYearId, fn ($q) => $q->where('school_year_id', $schoolYearId));
+            // where('school_year_id', null) => whereNull(...) => 0 ligne si
+            // l'année demandée est introuvable (cf. schoolYearScope()).
+            ->when($yearRequested, fn ($q) => $q->where('school_year_id', $schoolYearId));
 
         return [
             'total_subjects'  => $subjectIds->count(),
@@ -101,7 +103,7 @@ class StudentHomeService
         }
 
         $semesterId   = isset($filters['semester_id']) ? (int) $filters['semester_id'] : null;
-        $schoolYearId = $this->resolveSchoolYearId($filters['school_year'] ?? null);
+        [$yearRequested, $schoolYearId] = $this->schoolYearScope($filters);
         $session      = isset($filters['session']) ? SessionType::from($filters['session']) : null;
 
         $ues = UE::where('classe_id', $student->classe_id)
@@ -112,9 +114,9 @@ class StudentHomeService
             }])
             ->get();
 
-        $ueCards = $ues->map(function (UE $ue) use ($student, $schoolYearId, $session, $semesterId) {
+        $ueCards = $ues->map(function (UE $ue) use ($student, $yearRequested, $schoolYearId, $session, $semesterId) {
             $subjects = $ue->subjects
-                ->map(fn (Subject $subject) => $this->subjectMiniCard($student, $subject, $schoolYearId, $session));
+                ->map(fn (Subject $subject) => $this->subjectMiniCard($student, $subject, $yearRequested, $schoolYearId, $session));
 
             if ($session === SessionType::Rattrapage) {
                 // Onglet "Rattrapage" : seules les matières où l'étudiant a
@@ -173,13 +175,25 @@ class StudentHomeService
         return $classId === null || $classId === $student->classe_id;
     }
 
-    private function resolveSchoolYearId(?string $label): ?int
+    /**
+     * Résout le filtre `school_year` (label -> id).
+     *
+     * Fix : distingue "pas de filtre demandé" de "filtre demandé mais année
+     * introuvable" — un `school_year` inconnu doit renvoyer un résultat vide,
+     * pas être silencieusement ignoré (cf. `when($falsy, ...)` qui aurait
+     * sauté le filtre si on retournait simplement `null` dans les deux cas).
+     *
+     * @return array{0: bool, 1: ?int} [$filtreDemandé, $schoolYearId]
+     */
+    private function schoolYearScope(array $filters): array
     {
-        if (! $label) {
-            return null;
+        $label = $filters['school_year'] ?? null;
+
+        if ($label === null || $label === '') {
+            return [false, null];
         }
 
-        return SchoolYear::where('label', $label)->value('id');
+        return [true, SchoolYear::where('label', $label)->value('id')];
     }
 
     private function mentionFromAverage(float $average): Mention
@@ -265,13 +279,13 @@ class StudentHomeService
      * StudentSubjectMiniCard : matière + ses 3 notes (test/exam/makeup),
      * chacune null si non saisie ou non visible (PENDING) par l'étudiant.
      */
-    private function subjectMiniCard(Student $student, Subject $subject, ?int $schoolYearId, ?SessionType $session): array
+    private function subjectMiniCard(Student $student, Subject $subject, bool $yearRequested, ?int $schoolYearId, ?SessionType $session): array
     {
         $notes = Note::where('student_id', $student->id)
             ->where('subject_id', $subject->id)
             // RG : seules les notes PUBLISHED/LOCKED sont exposées à l'étudiant.
             ->whereIn('status', [NoteStatus::Published, NoteStatus::Locked])
-            ->when($schoolYearId, fn ($q) => $q->where('school_year_id', $schoolYearId))
+            ->when($yearRequested, fn ($q) => $q->where('school_year_id', $schoolYearId))
             ->get()
             ->keyBy(fn (Note $note) => $note->type->value);
 
