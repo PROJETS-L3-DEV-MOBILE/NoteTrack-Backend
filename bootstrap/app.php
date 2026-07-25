@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'isAdmin'  => \App\Http\Middleware\IsAdmin::class,
             'isTeacher'  => \App\Http\Middleware\IsTeacher::class,
+            'isStudent' => \App\Http\Middleware\IsStudent::class,
             'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
         ]);
 

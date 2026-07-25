@@ -50,12 +50,17 @@ class GradeCalculatorService
     /**
      * Toutes les matières disponibles rattachées, via leur UE, à la classe de
      * l'étudiant (Student::classe_id / Student::classe()).
+     *
+     * `$semesterId` (optionnel, ajouté pour le feature Étudiant) restreint
+     * aux matières du semestre demandé — utilisé par les filtres
+     * `?semester_id=` de GET /student/home/statistics et /student/results.
      */
-    private function studentSubjects(Student $student): Collection
+    private function studentSubjects(Student $student, ?int $semesterId = null): Collection
     {
         return Subject::query()
             ->where('is_available', true)
             ->whereHas('ue', fn ($q) => $q->where('classe_id', $student->classe_id))
+            ->when($semesterId, fn ($q) => $q->where('semester_id', $semesterId))
             ->get();
     }
 
@@ -63,9 +68,12 @@ class GradeCalculatorService
      * Moyenne d'une UE pour un étudiant ("Moyenne UE" du bulletin) : moyenne
      * pondérée par coefficient des notes effectives des matières de l'UE.
      */
-    public function ueAverage(Student $student, UE $ue): ?float
+    public function ueAverage(Student $student, UE $ue, ?int $semesterId = null): ?float
     {
-        $subjects = $ue->subjects()->where('is_available', true)->get();
+        $subjects = $ue->subjects()
+            ->where('is_available', true)
+            ->when($semesterId, fn ($q) => $q->where('semester_id', $semesterId))
+            ->get();
 
         $totalPoints = 0;
         $totalCoefficients = 0;
@@ -92,9 +100,9 @@ class GradeCalculatorService
      * Moyenne générale (RG02) : MG = Σ(note × coefficient) / Σ(coefficients),
      * calculée sur les matières disponibles de la classe de l'étudiant.
      */
-    public function generalAverage(Student $student): ?float
+    public function generalAverage(Student $student, ?int $semesterId = null): ?float
     {
-        $subjects = $this->studentSubjects($student);
+        $subjects = $this->studentSubjects($student, $semesterId);
 
         $totalPoints = 0;
         $totalCoefficients = 0;
@@ -120,9 +128,9 @@ class GradeCalculatorService
     /**
      * Statut "Résultat UE" du bulletin.
      */
-    public function ueValidated(Student $student, UE $ue): ?bool
+    public function ueValidated(Student $student, UE $ue, ?int $semesterId = null): ?bool
     {
-        $average = $this->ueAverage($student, $ue);
+        $average = $this->ueAverage($student, $ue, $semesterId);
 
         if ($average === null) {
             return null;
