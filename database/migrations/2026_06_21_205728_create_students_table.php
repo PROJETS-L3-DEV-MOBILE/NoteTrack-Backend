@@ -15,10 +15,10 @@ return new class extends Migration
             $table->string('matricule')->unique();
             $table->integer('number');
             $table->boolean('is_active')->default(true);
-            $table->foreignUuid('classe_id')->constrained('classes')->nullOnDelete();
+            $table->foreignUuid('classe_id')->constrained('classes');
             $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignUuid('admin_id')->constrained('admins')->nullOnDelete();
-            $table->foreignId('prom_id')->constrained('promotions')->nullOnDelete();
+            $table->foreignUuid('admin_id')->constrained('admins');
+            $table->foreignId('prom_id')->constrained('promotions')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });

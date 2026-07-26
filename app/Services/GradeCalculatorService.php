@@ -48,6 +48,17 @@ class GradeCalculatorService
     }
 
     /**
+     * Wrapper public de subjectEffectiveValue(), utilisé notamment par
+     * TranscriptService pour afficher la moyenne par matière du relevé de
+     * notes PDF sans dupliquer la règle RG04 (MAKEUP prioritaire, sinon
+     * moyenne TEST/EXAM, notes publiées uniquement).
+     */
+    public function subjectAverage(Student $student, Subject $subject): ?float
+    {
+        return $this->subjectEffectiveValue($student, $subject);
+    }
+
+    /**
      * Toutes les matières disponibles rattachées, via leur UE, à la classe de
      * l'étudiant (Student::classe_id / Student::classe()).
      *

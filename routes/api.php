@@ -10,13 +10,14 @@ use App\Http\Controllers\Admin\ClasseController;
 use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Admin\SchoolYearController;
 use App\Http\Controllers\Admin\SemesterController;
+use App\Http\Controllers\Admin\Student\NoteImportController;
+use App\Http\Controllers\Admin\Student\TranscriptController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Student\StudentHomeController;
 use App\Http\Controllers\Teacher\TeacherDashboardController;
-use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -34,7 +35,9 @@ Route::middleware(['auth:sanctum', 'ability:issue-access-token'])->post('/refres
 Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
 
     Route::get('/user', function (Request $request) {
-        return new UserResource($request);
+        $user = $request->user();
+        $user->append('profile');
+        return $user;
     });
 
     Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
@@ -102,6 +105,16 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
 
         // Students
         Route::apiResource('/students', StudentController::class);
+
+        // Relevé de notes PDF (synchrone : un seul étudiant, rendu rapide)
+        Route::get('/students/{student}/transcript', [TranscriptController::class, 'show']);
+
+        // Import CSV de notes (asynchrone : dispatché sur la queue, voir ProcessNoteImportJob)
+        Route::prefix('students/notes-import')->group(function () {
+            Route::get('/', [NoteImportController::class, 'index']);
+            Route::post('/', [NoteImportController::class, 'store']);
+            Route::get('/{noteImport}', [NoteImportController::class, 'show']);
+        });
 
         // Classes
         Route::apiResource('/classes', ClasseController::class);

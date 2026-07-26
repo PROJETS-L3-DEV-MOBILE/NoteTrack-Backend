@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Enums\NotificationType;
-use App\Models\{User, Student, Subject, Admin};
+use App\Models\{User, Student, Subject, Admin, NoteImport};
 use App\Notifications\SystemNotification;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;
@@ -113,5 +113,32 @@ class NotificationService
         type: NotificationType::NoteLocked
       ));
     }
+  }
+
+  /**
+   * Notifie l'admin qui a lancé un import CSV de notes une fois que le
+   * worker (ProcessNoteImportJob) a terminé le traitement, qu'il ait
+   * réussi, partiellement échoué, ou totalement échoué.
+   */
+  public function notifyNoteImportFinished(NoteImport $import): void
+  {
+    $actor = $import->createdBy;
+
+    if (! $actor) {
+      return;
+    }
+
+    $description = match ($import->status->value) {
+      'COMPLETED' => "Votre import \"{$import->original_filename}\" est terminé : {$import->imported_count} note(s) créée(s), {$import->updated_count} mise(s) à jour.",
+      'COMPLETED_WITH_ERRORS' => "Votre import \"{$import->original_filename}\" est terminé avec {$import->failed_count} ligne(s) en erreur sur {$import->processed_rows}.",
+      'FAILED' => "Votre import \"{$import->original_filename}\" a échoué. Consultez le détail des erreurs.",
+      default => "Votre import \"{$import->original_filename}\" a été traité.",
+    };
+
+    $actor->notify(new SystemNotification(
+      title: 'Import de notes terminé',
+      description: $description,
+      type: NotificationType::NoteImportation
+    ));
   }
 }
