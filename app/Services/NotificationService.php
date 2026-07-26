@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Enums\NotificationType;
-use App\Models\{User, Student, Subject, Admin, NoteImport};
+use App\Models\{User, Student, Subject, NoteImport};
 use App\Notifications\SystemNotification;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;

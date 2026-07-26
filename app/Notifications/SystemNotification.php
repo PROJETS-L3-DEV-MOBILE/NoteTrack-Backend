@@ -4,9 +4,10 @@ namespace App\Notifications;
 
 use App\Enums\NotificationType;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class SystemNotification extends Notification // implements ShouldQueue
+class SystemNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
