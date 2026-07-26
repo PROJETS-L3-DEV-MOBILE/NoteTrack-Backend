@@ -53,7 +53,7 @@ class DashboardSeeder extends Seeder
     private function seedAdmin(): Admin
     {
         $user = User::create([
-            'email' => 'admin.demo@tutoconnect.test',
+            'email' => 'admin@gmail.com',
             'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
@@ -79,7 +79,7 @@ class DashboardSeeder extends Seeder
             [$first, $last] = $name;
 
             $user = User::create([
-                'email' => Str::slug($first . '.' . $last) . '@tutoconnect.test',
+                'email' => Str::slug($first . '.' . $last) . '@gmail.com',
                 'password' => Hash::make('password'),
                 'role' => 'teacher',
             ]);
@@ -151,7 +151,7 @@ class DashboardSeeder extends Seeder
 
         $students = collect(range(1, $count))->map(function (int $number) use ($admin, $promotion, $classe) {
             $user = User::create([
-                'email' => "etudiant{$number}@tutoconnect.test",
+                'email' => "etudiant{$number}@gmail.com",
                 'password' => Hash::make('password'),
                 'role' => 'student',
             ]);
