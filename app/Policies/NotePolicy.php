@@ -19,9 +19,9 @@ class NotePolicy
 
     public function viewBySubject(User $user, Subject $subject): bool
     {
-        return $subject->teacher_id === $user->id;
+        return $user->role === 'teacher' && $subject->teacher_id === $user->teacher?->id;
     }
-
+    
     public function view(User $user, Note $note): bool
     {
         $isTeacherOwner = $note->subject?->teacher_id === $user->id;
