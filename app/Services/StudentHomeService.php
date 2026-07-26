@@ -7,7 +7,6 @@ use App\Enums\NoteStatus;
 use App\Enums\NoteType;
 use App\Enums\SessionType;
 use App\Models\Note;
-use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\UE;
@@ -160,22 +159,17 @@ class StudentHomeService
     }
 
     /**
-     * Distingue "pas de filtre demandé" de "filtre demandé mais année
-     * introuvable" — un `school_year` inconnu doit renvoyer un résultat vide,
-     * pas être silencieusement ignoré (cf. `when($falsy, ...)` qui aurait
-     * sauté le filtre si on retournait simplement `null` dans les deux cas).
-     *
      * @return array{0: bool, 1: ?int} [$filtreDemandé, $schoolYearId]
      */
     private function schoolYearScope(array $filters): array
     {
-        $label = $filters['school_year'] ?? null;
+        $schoolYearId = $filters['school_year_id'] ?? null;
 
-        if ($label === null || $label === '') {
+        if ($schoolYearId === null) {
             return [false, null];
         }
 
-        return [true, SchoolYear::where('label', $label)->value('id')];
+        return [true, (int) $schoolYearId];
     }
 
     private function mentionFromAverage(float $average): Mention
