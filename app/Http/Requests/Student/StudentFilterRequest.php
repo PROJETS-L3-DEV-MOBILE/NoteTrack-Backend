@@ -14,7 +14,7 @@ class StudentFilterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'school_year' => ['sometimes', 'string'],
+            'school_year_id' => ['sometimes', 'integer', 'exists:school_years,id'],
             'class_id'    => ['sometimes', 'uuid', 'exists:classes,id'],
             'semester_id' => ['sometimes', 'integer', 'exists:semesters,id'],
         ];
