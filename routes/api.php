@@ -112,7 +112,7 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
         Route::get('/students/{student}/transcript', [TranscriptController::class, 'show']);
 
         // Import CSV de notes (asynchrone : dispatché sur la queue, voir ProcessNoteImportJob)
-        Route::prefix('students/notes-import')->group(function () {
+        Route::prefix('notes-import')->group(function () {
             Route::get('/', [NoteImportController::class, 'index']);
             Route::post('/', [NoteImportController::class, 'store']);
             Route::get('/{noteImport}', [NoteImportController::class, 'show']);
