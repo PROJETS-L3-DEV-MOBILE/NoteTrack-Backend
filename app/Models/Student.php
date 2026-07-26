@@ -20,14 +20,19 @@ class Student extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
-    protected static function booted()
+    protected static function booted(): void
     {
-        static::deleted(function ($student) {
-            $student->user()->delete();
+        static::deleted(function (Student $student) {
+            if ($student->isForceDeleting()) {
+                $student->user()->withTrashed()->forceDelete();
+            } else {
+                $student->user()->delete();
+            }
         });
 
-        static::restored(function ($student) {
-            $student->user()->restore();
+        static::restored(function (Student $student) {
+            // withTrashed() est OBLIGATOIRE pour pouvoir retrouver le User en corbeille
+            $student->user()->withTrashed()->restore();
         });
     }
 

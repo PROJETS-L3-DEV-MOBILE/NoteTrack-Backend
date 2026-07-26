@@ -130,7 +130,7 @@ class StudentController extends Controller
      */
     public function destroy(string $id): JsonResponse
     {
-        $student = Student::findOrFail($id);
+        Student::findOrFail($id);
         Student::destroy($id);
         return response()->json(["message" => "Student deleted successfully"], 200);
     }

@@ -10,14 +10,30 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['first_name', 'last_name', 'user_id', 'admin_id', 'display_name'])]
 class Teacher extends Model
 {
-    use HasUniqueProfile, HasUuids;
+    use HasUniqueProfile, HasUuids, SoftDeletes;
 
     protected $keyType = 'string';
     public $incrementing = false;
+
+    protected static function booted(): void
+    {
+        static::deleted(function (Teacher $teacher) {
+            if ($teacher->isForceDeleting()) {
+                $teacher->user()->withTrashed()?->forceDelete();
+            } else {
+                $teacher->user()?->delete();
+            }
+        });
+
+        static::restored(function (Teacher $teacher) {
+            $teacher->user()->withTrashed()?->restore();
+        });
+    }
 
     public function user(): BelongsTo
     {
