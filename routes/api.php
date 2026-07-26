@@ -16,6 +16,7 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Student\StudentHomeController;
 use App\Http\Controllers\Teacher\TeacherDashboardController;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -33,9 +34,7 @@ Route::middleware(['auth:sanctum', 'ability:issue-access-token'])->post('/refres
 Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
 
     Route::get('/user', function (Request $request) {
-        $user = $request->user();
-        $user->append('profile');
-        return $user;
+        return new UserResource($request);
     });
 
     Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
