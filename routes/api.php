@@ -50,6 +50,8 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
 
     Route::get('/school-years', [SchoolYearController::class, 'index']);
 
+    Route::get('/classes', [ClasseController::class, 'index']);
+
     // Teacher group
     Route::middleware('isTeacher')->prefix('teacher')->group(function () {
         Route::get('/dashboard/stats', [TeacherDashboardController::class, 'stats']);
@@ -117,7 +119,7 @@ Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
         });
 
         // Classes
-        Route::apiResource('/classes', ClasseController::class);
+        Route::apiResource('/classes', ClasseController::class)->except(['index']);
 
         // promotions
         Route::apiResource('/promotions', PromotionController::class);
