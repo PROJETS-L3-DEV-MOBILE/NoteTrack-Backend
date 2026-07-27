@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Enums\NotificationType;
-use App\Models\{User, Student, Subject, NoteImport};
+use App\Models\{User, Student, Subject, NoteImport, Teacher};
 use App\Notifications\SystemNotification;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;
@@ -15,7 +15,7 @@ class NotificationService
   {
     $fullName = "{$student->first_name} {$student->last_name}";
 
-    $actor->notify(new SystemNotification(
+    Notification::send($actor, new SystemNotification(
       title: "Étudiant ajouté",
       description: "Vous avez ajouté l'étudiant {$fullName}.",
       type: NotificationType::NewStudent
@@ -34,7 +34,7 @@ class NotificationService
 
   public function notifySubjectCreated(User $actor, Subject $subject): void
   {
-    $actor->notify(new SystemNotification(
+    Notification::send($actor, new SystemNotification(
       title: "Matière créée",
       description: "Vous avez créé la matière {$subject->name}.",
       type: NotificationType::NewSubject
@@ -46,16 +46,30 @@ class NotificationService
 
     Notification::send($otherAdmins, new SystemNotification(
       title: "Nouvelle matière",
-      description: "{$actor->username} a ajouté la matière {$subject->name}.",
+      description: "{$actor->profile->username} a ajouté la matière {$subject->name}.",
       type: NotificationType::NewSubject
     ));
+
+
+    $teacher = Teacher::findOrFail($subject->teacher_id);
+    $assignedTeacherUser = $teacher->user;
+
+    if ($assignedTeacherUser) {
+      $assignedTeacherUser->notify(
+        new SystemNotification(
+          title: "Nouvelle matière assignée",
+          description: "Vous avez été assigné à la matière {$subject->name}.",
+          type: NotificationType::NewSubject
+        )
+      );
+    }
   }
 
   public function notifyNotesPublished(User $actor, Subject $subject, int $count, Collection $targetStudents): void
   {
     if ($count <= 0) return;
 
-    $actor->notify(new SystemNotification(
+    Notification::send($actor, new SystemNotification(
       title: "Notes publiées",
       description: "Vous avez publié {$count} note(s) pour la matière {$subject->name}.",
       type: NotificationType::NotePublished
@@ -76,7 +90,7 @@ class NotificationService
     if ($otherAdmins->isNotEmpty()) {
       Notification::send($otherAdmins, new SystemNotification(
         title: "Publication de notes",
-        description: "{$actor->username} a publié {$count} note(s) pour la matière {$subject->name}.",
+        description: "{$actor->profile->username} a publié {$count} note(s) pour la matière {$subject->name}.",
         type: NotificationType::NotePublished
       ));
     }
@@ -88,7 +102,7 @@ class NotificationService
       return;
     }
 
-    $actor->notify(new SystemNotification(
+    Notification::send($actor, new SystemNotification(
       title: "Notes verrouillées",
       description: "Vous avez verrouillé {$count} note(s) pour la matière {$subject->name}.",
       type: NotificationType::NoteLocked
@@ -109,7 +123,7 @@ class NotificationService
     if ($otherAdmins->isNotEmpty()) {
       Notification::send($otherAdmins, new SystemNotification(
         title: "Verrouillage de notes",
-        description: "{$actor->username} a verrouillé {$count} note(s) dans la matière {$subject->name}.",
+        description: "{$actor->profile->username} a verrouillé {$count} note(s) dans la matière {$subject->name}.",
         type: NotificationType::NoteLocked
       ));
     }
@@ -135,10 +149,26 @@ class NotificationService
       default => "Votre import \"{$import->original_filename}\" a été traité.",
     };
 
-    $actor->notify(new SystemNotification(
+    Notification::send($actor, new SystemNotification(
       title: 'Import de notes terminé',
       description: $description,
       type: NotificationType::NoteImportation
     ));
+
+    if ($import->status->value !== "COMPLETED") {
+      return;
+    }
+
+    $otherAdmins = User::where('role', 'admin')
+      ->where('id', '!=', $actor->id)
+      ->get();
+
+    if ($otherAdmins->isNotEmpty()) {
+      Notification::send($otherAdmins, new SystemNotification(
+        title: "Nouvelles notes importées",
+        description: "{$actor->profile->username} a importé de nouvelles notes via fichier CSV.",
+        type: NotificationType::NoteImportation
+      ));
+    }
   }
 }

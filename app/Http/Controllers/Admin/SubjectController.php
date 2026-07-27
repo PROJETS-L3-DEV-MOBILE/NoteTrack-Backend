@@ -41,6 +41,7 @@ class SubjectController extends Controller
 
         return response()->json(new SubjectResource($subject), 201);
     }
+    
     /**
      * PUT /admin/ues/{ue}/subjects/{subject}
      */
