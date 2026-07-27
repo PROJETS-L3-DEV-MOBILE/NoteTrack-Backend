@@ -24,14 +24,14 @@ class Teacher extends Model
     {
         static::deleted(function (Teacher $teacher) {
             if ($teacher->isForceDeleting()) {
-                $teacher->user()->withTrashed()?->forceDelete();
+                $teacher->user()->withTrashed()->forceDelete();
             } else {
-                $teacher->user()?->delete();
+                $teacher->user()->delete();
             }
         });
 
         static::restored(function (Teacher $teacher) {
-            $teacher->user()->withTrashed()?->restore();
+            $teacher->user()->withTrashed()->restore();
         });
     }
 
