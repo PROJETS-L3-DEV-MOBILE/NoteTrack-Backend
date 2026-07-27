@@ -17,8 +17,8 @@ use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Student\StudentHomeController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\Teacher\TeacherDashboardController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Auth (Guest)
@@ -34,10 +34,13 @@ Route::middleware(['auth:sanctum', 'ability:issue-access-token'])->post('/refres
 // Authenticated Routes
 Route::middleware(['auth:sanctum', 'ability:access-api'])->group(function () {
 
-    Route::get('/user', function (Request $request) {
-        $user = $request->user();
-        $user->append('profile');
-        return $user;
+    // Compte courant : identifié via le token Bearer, jamais via un {user}
+    // dans l'URL.
+    Route::get('/user', [UserController::class, 'show']);
+
+    Route::middleware('isAdmin')->group(function () {
+        Route::patch('/user', [UserController::class, 'update']);
+        Route::delete('/user', [UserController::class, 'destroy']);
     });
 
     Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {

@@ -26,7 +26,7 @@ class IsAdmin
 
         if ($user->role !== 'admin') {
             return response()->json([
-                'message' => 'Forbidden',
+                'message' => 'Accès interdit',
             ], 403);
         }
 
