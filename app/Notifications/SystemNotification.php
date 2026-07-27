@@ -21,17 +21,8 @@ class SystemNotification extends Notification implements ShouldQueue
     {
         return ['database', 'broadcast'];
     }
-
-    public function toDatabase(object $notifiable): array
-    {
-        return [
-            'title'       => $this->title,
-            'description' => $this->description,
-            'type'        => $this->type->value,
-        ];
-    }
-
-    public function toBroadcast(object $notifiable): array
+    
+    public function toArray(object $notifiable): array
     {
         return [
             'title'       => $this->title,
